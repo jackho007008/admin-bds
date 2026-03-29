@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         {stats.map((stat) => (
           <div key={stat.label} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <div className="p-2 bg-green-50 text-primary rounded-lg">
                 <stat.icon className="w-6 h-6" />
               </div>
               <span className={stat.trendType === "up" ? "text-green-600 text-xs font-medium" : "text-red-600 text-xs font-medium"}>
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-blue-600 text-sm">$250,000</p>
+                  <p className="font-bold text-primary text-sm">$250,000</p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active</p>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full font-bold text-sm">
+                <div className="w-10 h-10 bg-green-100 text-primary flex items-center justify-center rounded-full font-bold text-sm">
                   JD
                 </div>
                 <div className="flex-1">
