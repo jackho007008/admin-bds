@@ -11,6 +11,14 @@ export type PropertyType =
 
 export type PropertyStatus = 'DANG_BAN' | 'DUNG_BAN' | 'CHU_BAN' | 'CONG_TY_BAN';
 
+export type ImageType = "PROPERTY" | "CERTIFICATE";
+
+export interface PropertyImage {
+  id: string;
+  url: string;
+  type: ImageType;
+}
+
 export type LegalStatus = 'SO_HONG' | 'SO_DO' | 'GIAY_TAY' | 'DANG_CHO_SO' | 'CHUA_XAC_DINH';
 export type InteriorStatus = 'DAY_DU' | 'CO_BAN' | 'NHA_THO' | 'CHUA_XAC_DINH';
 
@@ -27,6 +35,9 @@ export interface Property {
   province?: string;
   district?: string;
   ward?: string;
+  provinceId?: number;
+  districtId?: number;
+  wardId?: number;
   actualArea?: number;
   paperArea?: number;
   frontageWidth?: number;
@@ -40,6 +51,7 @@ export interface Property {
   interiorNote?: string;
   tags?: string[];
   thumbnailUrl?: string;
+  images?: PropertyImage[];
   createdAt: string;
   updatedAt: string;
   creator?: {

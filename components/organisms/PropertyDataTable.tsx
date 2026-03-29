@@ -20,8 +20,22 @@ interface PropertyDataTableProps {
 }
 
 export function PropertyDataTable({ data, onView, onEdit, onDelete }: PropertyDataTableProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const formatPrice = (price: number) => {
+    if (!price || price === 0) return "Thỏa thuận";
+    
+    // Billion
+    if (price >= 1_000_000_000) {
+      const billions = price / 1_000_000_000;
+      return `${billions.toLocaleString('vi-VN', { maximumFractionDigits: 2 })} tỷ`;
+    }
+    
+    // Million
+    if (price >= 1_000_000) {
+      const millions = price / 1_000_000;
+      return `${millions.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} triệu`;
+    }
+    
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
   return (
@@ -54,7 +68,7 @@ export function PropertyDataTable({ data, onView, onEdit, onDelete }: PropertyDa
                   <p className="text-xs text-slate-500 mt-1">ID: {property.id}</p>
                 </TableCell>
                 <TableCell className="font-bold text-primary">
-                  {formatCurrency(property.price)}
+                  {formatPrice(property.price)}
                 </TableCell>
                 <TableCell className="text-slate-600 truncate max-w-[200px]" title={property.addressRaw}>
                   {property.addressRaw}

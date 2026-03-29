@@ -6,9 +6,6 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Request Interceptor: Attach Access Token

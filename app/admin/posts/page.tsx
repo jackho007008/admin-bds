@@ -4,23 +4,38 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostManagementTemplate } from "@/components/templates/PostManagementTemplate";
 import { PropertyDetailModal } from "@/components/organisms/PropertyDetailModal";
+import { PropertyEditModal } from "@/components/organisms/PropertyEditModal";
 import { propertyService } from "@/services/propertyService";
+import { Property } from "@/types/property";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 export default function PostManagementPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const [limit, setLimit] = useState(10);
 
-  // Selected property for modal
+  // Modals state
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [propertyToDeleteId, setPropertyToDeleteId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["properties", page, search],
-    queryFn: () => propertyService.getProperties(page, pageSize),
+    queryKey: ["properties", page, search, limit],
+    queryFn: () => propertyService.getProperties(page, limit),
     retry: 0,
   });
 
@@ -28,7 +43,7 @@ export default function PostManagementPage() {
   const { data: selectedProperty, isLoading: isDetailLoading } = useQuery({
     queryKey: ["property", selectedPropertyId],
     queryFn: () => propertyService.getPropertyById(selectedPropertyId!),
-    enabled: !!selectedPropertyId && isModalOpen,
+    enabled: !!selectedPropertyId && (isDetailModalOpen || isEditModalOpen),
   });
 
   const properties = data?.data || [];
@@ -43,6 +58,15 @@ export default function PostManagementPage() {
     onError: () => {
       toast.error("Xóa bài đăng thất bại.");
     }
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Property> | FormData }) => 
+      propertyService.updateProperty(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      queryClient.invalidateQueries({ queryKey: ["property", selectedPropertyId] });
+    },
   });
 
   if (isLoading) {
@@ -71,23 +95,29 @@ export default function PostManagementPage() {
 
   const handleView = (id: string) => {
     setSelectedPropertyId(id);
-    setIsModalOpen(true);
+    setIsDetailModalOpen(true);
   };
 
   const handleEdit = (id: string) => {
-    toast(`Chỉnh sửa bài đăng: ${id}`);
+    setSelectedPropertyId(id);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa bài đăng này?")) {
-      deleteMutation.mutate(id);
+    setPropertyToDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
+ 
+  const confirmDelete = () => {
+    if (propertyToDeleteId) {
+      deleteMutation.mutate(propertyToDeleteId);
+      setIsDeleteModalOpen(false);
+      setPropertyToDeleteId(null);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    // Optionally keep selectedId to avoid flicker when closing, 
-    // but clear it eventually
+  const handleSaveProperty = async (id: string, data: Partial<Property> | FormData): Promise<Property> => {
+    return await saveMutation.mutateAsync({ id, data });
   };
 
   return (
@@ -96,8 +126,9 @@ export default function PostManagementPage() {
         properties={filteredProperties}
         totalCount={totalCount}
         currentPage={page}
-        pageSize={pageSize}
+        pageSize={limit}
         onPageChange={setPage}
+        onLimitChange={setLimit}
         onSearch={handleSearch}
         onAdd={handleAdd}
         onView={handleView}
@@ -107,10 +138,41 @@ export default function PostManagementPage() {
 
       <PropertyDetailModal 
         property={selectedProperty || null}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
         isLoading={isDetailLoading}
       />
+
+      <PropertyEditModal
+        property={selectedProperty || null}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveProperty}
+      />
+
+      <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-slate-900">
+              Xác nhận xóa bài đăng?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500">
+              Hành động này không thể hoàn tác. Bài đăng sẽ bị xóa vĩnh viễn khỏi hệ thống.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex gap-3">
+            <AlertDialogCancel className="flex-1 bg-slate-100 hover:bg-slate-200 border-none text-slate-600 font-medium">
+              Hủy bỏ
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-medium shadow-sm transition-colors"
+            >
+              Xóa bài đăng
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

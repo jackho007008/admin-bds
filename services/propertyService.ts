@@ -20,4 +20,12 @@ export const propertyService = {
   deleteProperty: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/properties/${id}`);
   },
+
+  updateProperty: async (id: string, data: Partial<Property> | FormData): Promise<Property> => {
+    const isFormData = data instanceof FormData;
+    const response = await axiosInstance.patch(`/properties/${id}`, data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
+    return response.data.data;
+  },
 };

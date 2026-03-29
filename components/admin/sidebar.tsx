@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 import { 
   LayoutDashboard, 
   Users, 
@@ -10,7 +11,7 @@ import {
   MapPin,
   Compass,
   Tags,
-  Settings,
+
   Building2,
   FileText,
   LogOut
@@ -26,11 +27,17 @@ const menuItems = [
   { icon: MapPin, label: "Quản lý địa chỉ", href: "/admin/locations" },
   { icon: Compass, label: "Quản lý khám phá", href: "/admin/locations/discovery" },
   { icon: Tags, label: "Quản lý tag", href: "/admin/tags" },
-  { icon: Settings, label: "Cài đặt", href: "/admin/settings" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
+  const handleLogout = () => {
+    clearAuth();
+    router.push("/login");
+  };
 
   return (
     <div className="w-64 bg-[#0F612D] text-white h-screen fixed left-0 top-0 flex flex-col z-50 border-r border-[#1a7a3a]/30">
@@ -60,7 +67,10 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-[#1a7a3a]/30">
-        <button className="flex items-center gap-3 px-4 py-3 w-full text-white/70 hover:text-white hover:bg-[#1a7a3a]/40 rounded-lg transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 w-full text-white/70 hover:text-white hover:bg-[#1a7a3a]/40 rounded-lg transition-colors"
+        >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Đăng xuất</span>
         </button>
