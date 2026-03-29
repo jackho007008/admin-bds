@@ -18,6 +18,11 @@ export default function LoginPage() {
     onSuccess: (data) => {
       const { user, access_token } = data;
       
+      if (user.role !== 'ADMIN') {
+        toast.error("Chỉ tài khoản Admin mới được phép đăng nhập trang quản trị.");
+        return;
+      }
+
       setAuth(user, access_token);
       
       toast.success("Đăng nhập thành công!");
