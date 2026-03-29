@@ -1,5 +1,8 @@
+"use client";
+
 import { Sidebar } from "@/components/admin/sidebar";
 import { Navbar } from "@/components/admin/navbar";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function AdminLayout({
   children,
@@ -7,14 +10,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar />
-      <div className="pl-64 flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 p-8 pt-24 max-w-7xl mx-auto w-full">
-          {children}
-        </main>
+    <AuthGuard>
+      <div className="min-h-screen bg-slate-50">
+        <Sidebar />
+        <div className="pl-64 flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-1 p-8 pt-24 max-w-7xl mx-auto w-full">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

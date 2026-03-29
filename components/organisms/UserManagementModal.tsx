@@ -341,7 +341,7 @@ export function UserManagementModal({
                   name="provinceId"
                   render={({ field }) => (
                     <Select 
-                      onValueChange={(val) => field.onChange(parseInt(val))} 
+                      onValueChange={(val) => field.onChange(parseInt(val ?? "50"))} 
                       value={field.value?.toString() ?? "50"}
                       items={[
                         { value: "50", label: "Thành phố Hồ Chí Minh" },
