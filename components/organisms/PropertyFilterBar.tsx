@@ -7,15 +7,16 @@ import {
 
 interface PropertyFilterBarProps {
   onSearch?: (value: string) => void;
+  searchValue?: string;
   onFilterClick?: () => void;
   onAddClick?: () => void;
 }
 
-export function PropertyFilterBar({ onSearch, onFilterClick, onAddClick }: PropertyFilterBarProps) {
+export function PropertyFilterBar({ onSearch, searchValue, onFilterClick, onAddClick }: PropertyFilterBarProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6 bg-white border-b border-slate-200">
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <PropertySearch onChange={onSearch} />
+        <PropertySearch value={searchValue} onChange={onSearch} />
         <Button variant="outline" size="icon" onClick={onFilterClick} title="Lọc chi tiết">
           <Filter className="w-4 h-4 text-slate-500" />
         </Button>

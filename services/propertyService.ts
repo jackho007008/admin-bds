@@ -2,9 +2,9 @@ import axiosInstance from "@/lib/axios";
 import { Property } from "@/types/property";
 
 export const propertyService = {
-  getProperties: async (page: number = 1, limit: number = 5): Promise<{ data: Property[], totalCount: number }> => {
+  getProperties: async (page: number = 1, limit: number = 5, search?: string): Promise<{ data: Property[], totalCount: number }> => {
     const response = await axiosInstance.get("/properties/search", {
-      params: { page, limit }
+      params: { page, limit, address: search || undefined }
     });
     return {
       data: response.data.data,
@@ -27,5 +27,9 @@ export const propertyService = {
       headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
     });
     return response.data.data;
+  },
+
+  incrementViewCount: async (id: string): Promise<void> => {
+    await axiosInstance.post(`/properties/${id}/view`);
   },
 };

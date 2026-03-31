@@ -14,6 +14,7 @@ interface PostManagementTemplateProps {
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
   onSearch: (value: string) => void;
+  searchValue?: string;
   onAdd: () => void;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
@@ -28,6 +29,7 @@ export function PostManagementTemplate({
   onPageChange,
   onLimitChange,
   onSearch,
+  searchValue,
   onAdd,
   onView,
   onEdit,
@@ -43,7 +45,7 @@ export function PostManagementTemplate({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <PropertyFilterBar onSearch={onSearch} onAddClick={onAdd} />
+        <PropertyFilterBar onSearch={onSearch} searchValue={searchValue} onAddClick={onAdd} />
         <div className="p-6 space-y-4">
           <PropertyDataTable 
             data={properties} 

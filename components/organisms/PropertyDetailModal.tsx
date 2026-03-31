@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Property, PropertyType, PropertyStatus, LegalStatus, InteriorStatus } from "@/types/property";
+import { propertyService } from "@/services/propertyService";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { 
@@ -24,7 +25,8 @@ import {
   Layers, 
   User, 
   Calendar,
-  Tag
+  Tag,
+  Eye
 } from "lucide-react";
 
 interface PropertyDetailModalProps {
@@ -69,6 +71,12 @@ const statusLabels: Record<PropertyStatus, { label: string; color: string }> = {
 };
 
 export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: PropertyDetailModalProps) {
+  useEffect(() => {
+    if (isOpen && property?.id) {
+      propertyService.incrementViewCount(property.id).catch(console.error);
+    }
+  }, [isOpen, property?.id]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -111,10 +119,17 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                 <Badge variant="secondary" className="bg-slate-100 text-slate-700 px-4 py-1.5 text-sm font-semibold uppercase tracking-wider">
                   {propertyTypeLabels[property.type]}
                 </Badge>
-                <span className="text-sm text-slate-400 self-center ml-2 font-mono tracking-tight">ID: {property.id}</span>
+                <div className="flex items-center gap-4 ml-2">
+                  <span className="text-sm text-slate-400 font-mono tracking-tight">ID: {property.id}</span>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <span>{property.interactions?.views || 0} lượt xem</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
         </DialogHeader>
 
         <ScrollArea className="flex-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { PostManagementTemplate } from "@/components/templates/PostManagementTemplate";
 import { PropertyDetailModal } from "@/components/organisms/PropertyDetailModal";
 import { PropertyEditModal } from "@/components/organisms/PropertyEditModal";
@@ -35,7 +35,8 @@ export default function PostManagementPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["properties", page, search, limit],
-    queryFn: () => propertyService.getProperties(page, limit),
+    queryFn: () => propertyService.getProperties(page, limit, search),
+    placeholderData: keepPreviousData,
     retry: 0,
   });
 
@@ -77,13 +78,8 @@ export default function PostManagementPage() {
       </div>
     );
   }
-
-  // Client-side filtering as a fallback, though server-side is preferred
-  const filteredProperties = properties.filter((p) =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.addressRaw.toLowerCase().includes(search.toLowerCase())
-  );
-
+  // Use server-side filtering results directly
+  const filteredProperties = properties;
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1); // Reset to first page on search
@@ -130,6 +126,7 @@ export default function PostManagementPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
         onSearch={handleSearch}
+        searchValue={search}
         onAdd={handleAdd}
         onView={handleView}
         onEdit={handleEdit}
