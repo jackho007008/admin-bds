@@ -14,7 +14,8 @@ import {
 
   Building2,
   FileText,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ const menuItems = [
   { icon: MapPin, label: "Quản lý địa chỉ", href: "/admin/locations" },
   { icon: Compass, label: "Quản lý khám phá", href: "/admin/locations/discovery" },
   { icon: Tags, label: "Quản lý tag", href: "/admin/tags" },
+  { icon: Settings, label: "Cấu hình hệ thống", href: "/admin/settings" },
 ];
 
 export function Sidebar() {

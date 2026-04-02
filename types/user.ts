@@ -19,6 +19,7 @@ export interface AdminUser {
   role: Role;
   isActive: boolean;
   avatarUrl: string | null;
+  maxHiddenInfoViewsPerDay: number | null;
   department?: {
     id: string;
     name: string;

@@ -38,6 +38,7 @@ const userSchema = z.object({
   departmentId: z.string().optional().nullable(),
   provinceId: z.number().optional().nullable(),
   isActive: z.boolean().optional(),
+  maxHiddenInfoViewsPerDay: z.number().optional().nullable(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -104,6 +105,7 @@ export function UserManagementModal({
       departmentId: "",
       provinceId: 50,
       isActive: true,
+      maxHiddenInfoViewsPerDay: null,
     },
   });
 
@@ -139,6 +141,7 @@ export function UserManagementModal({
         departmentId: user.department?.id || "",
         // provinceId is handled by backend or not explicitly in this UI yet, matching mobile app defaults
         provinceId: 50, 
+        maxHiddenInfoViewsPerDay: user.maxHiddenInfoViewsPerDay,
       });
     } else if (mode === "create" && isOpen) {
       reset({
@@ -385,6 +388,23 @@ export function UserManagementModal({
                     </Select>
                   )}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3" /> GH lượt xem ẩn / ngày
+                </Label>
+                <Input 
+                  type="number"
+                  placeholder="Mặc định (theo hệ thống)"
+                  className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" 
+                  {...register("maxHiddenInfoViewsPerDay", { 
+                    setValueAs: (v) => v === "" ? null : parseInt(v, 10) 
+                  })} 
+                />
+                <p className="text-[10px] text-slate-400 px-1 font-medium italic">
+                  * Để trống để sử dụng cấu hình chung của hệ thống.
+                </p>
               </div>
             </div>
 
