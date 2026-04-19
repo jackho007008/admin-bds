@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
-  Building,
   Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,19 +27,16 @@ export default function LocationsPage() {
   const [search, setSearch] = useState("");
   
   // Cache for child items
-  const [districtsCache, setDistrictsCache] = useState<Record<number, LocationItem[]>>({});
   const [wardsCache, setWardsCache] = useState<Record<number, LocationItem[]>>({});
   
   // UI State
   const [expandedProvinces, setExpandedProvinces] = useState<Set<number>>(new Set());
-  const [expandedDistricts, setExpandedDistricts] = useState<Set<number>>(new Set());
   
   // Pending changes: state of toggles before saving
   const [pendingChanges, setPendingChanges] = useState<{
     provinces: Record<number, { isActive: boolean; cascade: boolean }>;
-    districts: Record<number, { isActive: boolean; cascade: boolean }>;
     wards: Record<number, { isActive: boolean }>;
-  }>({ provinces: {}, districts: {}, wards: {} });
+  }>({ provinces: {}, wards: {} });
 
   const fetchProvinces = useCallback(async () => {
     setIsLoading(true);
@@ -48,7 +44,7 @@ export default function LocationsPage() {
       const data = await locationService.getProvinces();
       setProvinces(data);
       // Reset pending changes on refresh
-      setPendingChanges({ provinces: {}, districts: {}, wards: {} });
+      setPendingChanges({ provinces: {}, wards: {} });
     } catch {
       toast.error("Không thể tải danh sách tỉnh thành.");
     } finally {
@@ -60,21 +56,11 @@ export default function LocationsPage() {
     fetchProvinces();
   }, [fetchProvinces]);
 
-  const fetchDistricts = async (provinceId: number) => {
-    if (districtsCache[provinceId]) return;
+  const fetchWards = async (provinceId: number, force = false) => {
+    if (!force && wardsCache[provinceId]) return;
     try {
-      const data = await locationService.getDistricts(provinceId);
-      setDistrictsCache(prev => ({ ...prev, [provinceId]: data }));
-    } catch {
-      toast.error("Không thể tải danh sách quận huyện.");
-    }
-  };
-
-  const fetchWards = async (districtId: number) => {
-    if (wardsCache[districtId]) return;
-    try {
-      const data = await locationService.getWards(districtId);
-      setWardsCache(prev => ({ ...prev, [districtId]: data }));
+      const data = await locationService.getWardsByProvince(provinceId);
+      setWardsCache(prev => ({ ...prev, [provinceId]: data }));
     } catch {
       toast.error("Không thể tải danh sách phường xã.");
     }
@@ -82,18 +68,6 @@ export default function LocationsPage() {
 
   const toggleProvinceExpansion = (id: number) => {
     setExpandedProvinces(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else {
-        next.add(id);
-        fetchDistricts(id);
-      }
-      return next;
-    });
-  };
-
-  const toggleDistrictExpansion = (id: number) => {
-    setExpandedDistricts(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else {
@@ -108,40 +82,16 @@ export default function LocationsPage() {
     const nextActive = !currentActive;
     setPendingChanges(prev => {
       const nextProvinces = { ...prev.provinces, [provinceId]: { isActive: nextActive, cascade: true } };
-      const nextDistricts = { ...prev.districts };
       const nextWards = { ...prev.wards };
       
       // Cascade to cached items
-      const districts = districtsCache[provinceId];
-      if (districts) {
-        districts.forEach(d => {
-          nextDistricts[d.id] = { isActive: nextActive, cascade: true };
-          const wards = wardsCache[d.id];
-          if (wards) {
-            wards.forEach(w => {
-              nextWards[w.id] = { isActive: nextActive };
-            });
-          }
-        });
-      }
-      return { ...prev, provinces: nextProvinces, districts: nextDistricts, wards: nextWards };
-    });
-  };
-
-  const handleDistrictToggle = (districtId: number, currentActive: boolean) => {
-    const nextActive = !currentActive;
-    setPendingChanges(prev => {
-      const nextDistricts = { ...prev.districts, [districtId]: { isActive: nextActive, cascade: true } };
-      const nextWards = { ...prev.wards };
-      
-      // Cascade to cached items
-      const wards = wardsCache[districtId];
+      const wards = wardsCache[provinceId];
       if (wards) {
         wards.forEach(w => {
           nextWards[w.id] = { isActive: nextActive };
         });
       }
-      return { ...prev, districts: nextDistricts, wards: nextWards };
+      return { ...prev, provinces: nextProvinces, wards: nextWards };
     });
   };
 
@@ -155,7 +105,6 @@ export default function LocationsPage() {
 
   const hasChanges = useMemo(() => {
     return Object.keys(pendingChanges.provinces).length > 0 ||
-           Object.keys(pendingChanges.districts).length > 0 ||
            Object.keys(pendingChanges.wards).length > 0;
   }, [pendingChanges]);
 
@@ -163,17 +112,21 @@ export default function LocationsPage() {
     setIsSaving(true);
     try {
       const pUpdates = Object.entries(pendingChanges.provinces).map(([id, val]) => ({ id: Number(id), ...val }));
-      const dUpdates = Object.entries(pendingChanges.districts).map(([id, val]) => ({ id: Number(id), ...val }));
       const wUpdates = Object.entries(pendingChanges.wards).map(([id, val]) => ({ id: Number(id), ...val }));
 
       await locationService.updateLocationsBulk({
         provinces: pUpdates.length > 0 ? pUpdates : undefined,
-        districts: dUpdates.length > 0 ? dUpdates : undefined,
         wards: wUpdates.length > 0 ? wUpdates : undefined,
       });
       
       toast.success("Đã lưu cấu hình địa chỉ thành công!");
-      fetchProvinces(); // Refresh to clear visual state and reload from server
+      await fetchProvinces(); // Refresh provinces
+      
+      // Re-fetch wards for all currently expanded provinces to ensure UI sync
+      // We don't clear setWardsCache({}) here to avoid race conditions with functional updates
+      expandedProvinces.forEach(id => {
+        fetchWards(id, true); // Force re-fetch bypassing cache
+      });
     } catch {
       toast.error("Không thể lưu cấu hình địa chỉ.");
     } finally {
@@ -256,7 +209,6 @@ export default function LocationsPage() {
                 const isExpanded = expandedProvinces.has(province.id);
                 const isPending = pendingChanges.provinces[province.id];
                 const isActive = isPending ? isPending.isActive : province.isActive;
-                const districts = districtsCache[province.id] || [];
 
                 return (
                   <div key={province.id} className="group">
@@ -308,115 +260,58 @@ export default function LocationsPage() {
                       </button>
                     </div>
 
-                    {/* Districts Level */}
+                    {/* Wards Level */}
                     {isExpanded && (
-                      <div className="pl-16 pr-6 pb-4 space-y-2 mt-1">
-                        {districts.length === 0 ? (
+                      <div className="pl-16 pr-6 pb-6 space-y-4 mt-1">
+                        {wardsCache[province.id] === undefined ? (
                           <div className="py-4 flex justify-center">
                             <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                           </div>
+                        ) : wardsCache[province.id]?.length === 0 ? (
+                          <div className="py-4 text-center text-slate-400 text-sm italic">
+                            Không có dữ liệu phường xã cho tỉnh này.
+                          </div>
                         ) : (
-                          districts.map((district) => {
-                            const isDistExpanded = expandedDistricts.has(district.id);
-                            const isDistPending = pendingChanges.districts[district.id];
-                            const isDistActive = isDistPending ? isDistPending.isActive : district.isActive;
-                            const wards = wardsCache[district.id] || [];
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {wardsCache[province.id]?.map((ward) => {
+                              const isWardPending = pendingChanges.wards[ward.id];
+                              const isWardActive = isWardPending ? isWardPending.isActive : ward.isActive;
 
-                            return (
-                              <div key={district.id} className="rounded-xl overflow-hidden border border-slate-50 bg-slate-50/30">
-                                {/* District Row */}
-                                <div className="flex items-center justify-between p-3 px-5 transition-colors">
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <button 
-                                      onClick={() => toggleDistrictExpansion(district.id)}
-                                      className="p-1 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-100 shadow-none hover:shadow-sm"
-                                    >
-                                      {isDistExpanded ? (
-                                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                                      ) : (
-                                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                                      )}
-                                    </button>
-                                    <div className="flex items-center gap-2">
-                                      <Building className={cn(
-                                        "w-4 h-4",
-                                        isDistActive ? "text-emerald-500" : "text-slate-300"
-                                      )} />
-                                      <span className={cn(
-                                        "text-sm font-bold",
-                                        isDistActive ? "text-slate-700" : "text-slate-400"
-                                      )}>
-                                        {district.name}
-                                        {isDistPending && <span className="ml-1.5 text-[9px] uppercase tracking-wider text-emerald-500">Pending</span>}
-                                      </span>
-                                    </div>
+                              return (
+                                <div 
+                                  key={ward.id}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 px-5 rounded-2xl border transition-all",
+                                    isWardActive 
+                                      ? "bg-white border-emerald-100 text-emerald-700 shadow-sm" 
+                                      : "bg-slate-50/50 border-slate-100 text-slate-400"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Home className={cn(
+                                      "w-4 h-4 transition-colors",
+                                      isWardActive ? "text-emerald-500" : "text-slate-300"
+                                    )} />
+                                    <span className="text-sm font-bold truncate leading-none">{ward.name}</span>
+                                    {isWardPending && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />}
                                   </div>
-
                                   <button 
-                                    onClick={() => handleDistrictToggle(district.id, isDistActive)}
+                                    onClick={() => handleWardToggle(ward.id, isWardActive)}
                                     className={cn(
-                                      "p-1.5 rounded-full transition-all",
-                                      isDistActive ? "text-emerald-500 hover:bg-emerald-50" : "text-slate-200 hover:bg-slate-100"
+                                      "p-1.5 rounded-full transition-all shrink-0",
+                                      isWardActive ? "text-emerald-500 hover:bg-emerald-50" : "text-slate-200 hover:bg-slate-100"
                                     )}
                                   >
-                                    {isDistActive ? (
+                                    {isWardActive ? (
                                       <CheckCircle2 className="w-5 h-5" />
                                     ) : (
                                       <Circle className="w-5 h-5" />
                                     )}
                                   </button>
                                 </div>
-
-                                {/* Wards Level */}
-                                {isDistExpanded && (
-                                  <div className="pl-12 pr-4 pb-4 space-y-1">
-                                    {wards.length === 0 ? (
-                                      <div className="py-2 flex justify-center">
-                                        <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
-                                      </div>
-                                    ) : (
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                        {wards.map((ward) => {
-                                          const isWardPending = pendingChanges.wards[ward.id];
-                                          const isWardActive = isWardPending ? isWardPending.isActive : ward.isActive;
-
-                                          return (
-                                            <div 
-                                              key={ward.id}
-                                              className={cn(
-                                                "flex items-center justify-between p-2.5 px-4 rounded-xl border transition-all",
-                                                isWardActive 
-                                                  ? "bg-white border-emerald-100 text-emerald-700 shadow-sm" 
-                                                  : "bg-slate-50/50 border-slate-100 text-slate-400"
-                                              )}
-                                            >
-                                              <div className="flex items-center gap-2">
-                                                <Home className="w-3.5 h-3.5 opacity-70" />
-                                                <span className="text-xs font-bold leading-none">{ward.name}</span>
-                                              </div>
-                                              <button 
-                                                onClick={() => handleWardToggle(ward.id, isWardActive)}
-                                                className={cn(
-                                                  "p-1 rounded-full",
-                                                  isWardActive ? "text-emerald-500" : "text-slate-200"
-                                                )}
-                                              >
-                                                {isWardActive ? (
-                                                  <CheckCircle2 className="w-4 h-4" />
-                                                ) : (
-                                                  <Circle className="w-4 h-4" />
-                                                )}
-                                              </button>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                     )}

@@ -157,7 +157,6 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
   };
 
   const [provinces, setProvinces] = React.useState<LocationItem[]>([]);
-  const [districts, setDistricts] = React.useState<LocationItem[]>([]);
   const [wards, setWards] = React.useState<LocationItem[]>([]);
   const [availableTags, setAvailableTags] = React.useState<Tag[]>([]);
 
@@ -211,12 +210,9 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
         wardId: property.wardId || null,
       });
 
-      // Fetch initial districts/wards if IDs exist
+      // Fetch initial wards if province exists (2-level address)
       if (property.provinceId) {
-        locationService.getDistricts(property.provinceId).then(setDistricts);
-      }
-      if (property.districtId) {
-        locationService.getWards(property.districtId).then(setWards);
+        locationService.getWardsByProvince(property.provinceId).then(setWards);
       }
 
       // Reset image states
@@ -346,13 +342,13 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                 <TabsContent value="basic" className="space-y-6 focus-visible:outline-none">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Tiêu đề bài đăng</Label>
+                      <Label className="text-sm font-bold text-slate-500">Tiêu đề bài đăng</Label>
                       <Input placeholder="Nhập tiêu đề thu hút..." className="py-6 text-base font-medium rounded-xl border-slate-200 h-14" {...register("title")} />
                       {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Giá bán (VND)</Label>
+                      <Label className="text-sm font-bold text-slate-500">Giá bán (VND)</Label>
                       <Input 
                         type="number" 
                         placeholder="Ví dụ: 1500 cho 1.5 tỷ hoặc 1 cho 1 triệu" 
@@ -369,7 +365,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loại bất động sản</Label>
+                      <Label className="text-sm font-bold text-slate-500">Loại bất động sản</Label>
                       <Controller
                         control={control}
                         name="type"
@@ -389,7 +385,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Trạng thái tin đăng</Label>
+                      <Label className="text-sm font-bold text-slate-500">Trạng thái tin đăng</Label>
                       <Controller
                         control={control}
                         name="status"
@@ -413,24 +409,24 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                 <TabsContent value="location" className="space-y-6 focus-visible:outline-none">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Vị trí thực tế / Địa chỉ</Label>
+                      <Label className="text-sm font-bold text-slate-500">Vị trí thực tế / Địa chỉ</Label>
                       <Input placeholder="Số nhà, tên đường..." className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" {...register("addressRaw")} />
                       {errors.addressRaw && <p className="text-red-500 text-xs mt-1">{errors.addressRaw.message}</p>}
                     </div>
 
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Địa chỉ trên sổ (Pháp lý)</Label>
+                      <Label className="text-sm font-bold text-slate-500">Địa chỉ trên sổ (Pháp lý)</Label>
                       <Input placeholder="Ghi đúng như trên sổ hồng/đỏ..." className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" {...register("addressOnPaper")} />
                     </div>
 
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Địa chỉ khác / Ghi chú vị trí</Label>
+                      <Label className="text-sm font-bold text-slate-500">Địa chỉ khác / Ghi chú vị trí</Label>
                       <Input placeholder="Ngõ, hẻm, đặc điểm nhận dạng..." className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" {...register("otherAddress")} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 col-span-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-2">
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Tỉnh / Thành phố</Label>
+                        <Label className="text-sm font-bold text-slate-500">Tỉnh / Thành phố</Label>
                         <Controller
                           control={control}
                           name="provinceId"
@@ -439,12 +435,10 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                               onValueChange={(val) => {
                                 const id = Number(val);
                                 field.onChange(id);
-                                // Reset child selects
-                                setValue("districtId", null);
+                                // Reset ward select
                                 setValue("wardId", null);
-                                setDistricts([]);
                                 setWards([]);
-                                if (id) locationService.getDistricts(id).then(setDistricts);
+                                if (id) locationService.getWardsByProvince(id).then(setWards);
                               }} 
                               value={field.value?.toString() || ""}
                               items={provinces.map(p => ({ value: p.id.toString(), label: p.name }))}
@@ -462,38 +456,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Quận / Huyện</Label>
-                        <Controller
-                          control={control}
-                          name="districtId"
-                          render={({ field }) => (
-                            <Select 
-                              disabled={!districts.length}
-                              onValueChange={(val) => {
-                                const id = Number(val);
-                                field.onChange(id);
-                                // Reset child select
-                                setValue("wardId", null);
-                                setWards([]);
-                                if (id) locationService.getWards(id).then(setWards);
-                              }} 
-                              value={field.value?.toString() || ""}
-                              items={districts.map(d => ({ value: d.id.toString(), label: d.name }))}
-                            >
-                              <SelectTrigger className="py-6 h-14 text-base font-medium rounded-xl border-slate-200">
-                                <SelectValue placeholder="Chọn Quận/Huyện" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {districts.map(d => (
-                                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Phường / Xã</Label>
+                        <Label className="text-sm font-bold text-slate-500">Phường / Xã</Label>
                         <Controller
                           control={control}
                           name="wardId"
@@ -523,34 +486,34 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                 <TabsContent value="details" className="space-y-8 focus-visible:outline-none">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">DT Thực tế (m²)</Label>
+                      <Label className="text-xs font-bold text-slate-500">DT Thực tế (m²)</Label>
                       <Input type="number" step="0.1" className="py-6 h-14 text-base font-medium rounded-xl" {...register("actualArea", { valueAsNumber: true })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">DT Sổ (m²)</Label>
+                      <Label className="text-xs font-bold text-slate-500">DT Sổ (m²)</Label>
                       <Input type="number" step="0.1" className="py-6 h-14 text-base font-medium rounded-xl" {...register("paperArea", { valueAsNumber: true })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mặt tiền (m)</Label>
+                      <Label className="text-xs font-bold text-slate-500">Mặt tiền (m)</Label>
                       <Input type="number" step="0.1" className="py-6 h-14 text-base font-medium rounded-xl" {...register("frontageWidth", { valueAsNumber: true })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đường vào (m)</Label>
+                      <Label className="text-xs font-bold text-slate-500">Đường vào (m)</Label>
                       <Input type="number" step="0.1" className="py-6 h-14 text-base font-medium rounded-xl" {...register("roadWidth", { valueAsNumber: true })} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Số tầng</Label>
+                      <Label className="text-sm font-bold text-slate-500">Số tầng</Label>
                       <Input type="number" className="py-6 h-14 text-base font-medium rounded-xl" {...register("floors", { valueAsNumber: true })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Phòng ngủ</Label>
+                      <Label className="text-sm font-bold text-slate-500">Phòng ngủ</Label>
                       <Input type="number" className="py-6 h-14 text-base font-medium rounded-xl" {...register("bedrooms", { valueAsNumber: true })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Phòng tắm</Label>
+                      <Label className="text-sm font-bold text-slate-500">Phòng tắm</Label>
                       <Input type="number" className="py-6 h-14 text-base font-medium rounded-xl" {...register("toilets", { valueAsNumber: true })} />
                     </div>
                   </div>
@@ -558,7 +521,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Pháp lý</Label>
+                        <Label className="text-sm font-bold text-slate-500">Pháp lý</Label>
                         <Controller
                           control={control}
                           name="legalStatus"
@@ -577,14 +540,14 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Ghi chú pháp lý</Label>
+                        <Label className="text-sm font-bold text-slate-500">Ghi chú pháp lý</Label>
                         <Textarea placeholder="Chi tiết về số tờ, số thửa..." className="min-h-[100px] text-base rounded-xl" {...register("legalNote")} />
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Nội thất</Label>
+                        <Label className="text-sm font-bold text-slate-500">Nội thất</Label>
                         <Controller
                           control={control}
                           name="interiorStatus"
@@ -603,7 +566,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Ghi chú nội thất</Label>
+                        <Label className="text-sm font-bold text-slate-500">Ghi chú nội thất</Label>
                         <Textarea placeholder="Liệt kê các thiết bị đi kèm..." className="min-h-[100px] text-base rounded-xl" {...register("interiorNote")} />
                       </div>
                     </div>
@@ -612,7 +575,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
 
                 <TabsContent value="content" className="space-y-8 focus-visible:outline-none">
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Mô tả bài đăng</Label>
+                    <Label className="text-sm font-bold text-slate-500">Mô tả bài đăng</Label>
                     <Textarea 
                       placeholder="Mô tả chi tiết các ưu điểm, tiện ích xung quanh..." 
                       className="min-h-[300px] text-base leading-relaxed rounded-2xl border-slate-200 p-6" 
@@ -621,7 +584,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-sm font-bold text-slate-500 uppercase tracking-widest">Thẻ & Đặc điểm</Label>
+                    <Label className="text-sm font-bold text-slate-500">Thẻ & Đặc điểm</Label>
                     
                     <Controller
                       control={control}
@@ -655,7 +618,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                             </div>
 
                             <div className="space-y-3">
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gợi ý từ hệ thống</p>
+                              <p className="text-xs font-bold text-slate-400">Gợi ý từ hệ thống</p>
                               <div className="flex flex-wrap gap-2">
                                 {availableTags.map(tag => (
                                   <Badge 
@@ -686,7 +649,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <Label className="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                        <Label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                           <ImageIcon className="w-4 h-4 text-primary" /> Hình ảnh bất động sản
                         </Label>
                         <p className="text-xs text-slate-400 font-medium italic">Tối đa 10 ảnh. Ảnh đầu tiên sẽ được dùng làm ảnh bìa.</p>
@@ -779,7 +742,7 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <Label className="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                        <Label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                           <FileText className="w-4 h-4 text-emerald-500" /> Hình ảnh pháp lý (Sổ hồng/Sổ đỏ)
                         </Label>
                         <p className="text-xs text-slate-400 font-medium italic">Ảnh pháp lý sẽ giúp tin đăng được ưu tiên và tin cậy hơn.</p>

@@ -14,7 +14,6 @@ export interface LocationUpdate {
 
 export interface BulkLocationUpdate {
   provinces?: LocationUpdate[];
-  districts?: LocationUpdate[];
   wards?: { id: number; isActive: boolean }[];
 }
 
@@ -24,13 +23,8 @@ export const locationService = {
     return response.data.data;
   },
 
-  getDistricts: async (provinceId: number): Promise<LocationItem[]> => {
-    const response = await axiosInstance.get<{ data: LocationItem[] }>(`/locations/admin/provinces/${provinceId}/districts`);
-    return response.data.data;
-  },
-
-  getWards: async (districtId: number): Promise<LocationItem[]> => {
-    const response = await axiosInstance.get<{ data: LocationItem[] }>(`/locations/admin/districts/${districtId}/wards`);
+  getWardsByProvince: async (provinceId: number): Promise<LocationItem[]> => {
+    const response = await axiosInstance.get<{ data: LocationItem[] }>(`/locations/admin/provinces/${provinceId}/wards`);
     return response.data.data;
   },
 
@@ -39,13 +33,13 @@ export const locationService = {
     return response.data;
   },
 
-  getDiscoveryDistricts: async (provinceId: number) => {
+  getDiscoveryWards: async (provinceId: number) => {
     const response = await axiosInstance.get<{ data: any[] }>(`/locations/discovery/${provinceId}`);
     return response.data.data;
   },
 
-  updateDiscoveryDistricts: async (provinceId: number, districtIds: number[]) => {
-    const response = await axiosInstance.patch(`/locations/admin/discovery/${provinceId}`, { districtIds });
+  updateDiscoveryWards: async (provinceId: number, wardIds: number[]) => {
+    const response = await axiosInstance.patch(`/locations/admin/discovery/${provinceId}`, { wardIds });
     return response.data;
   },
 };

@@ -280,13 +280,13 @@ export function UserManagementModal({
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Họ và tên</Label>
+                <Label className="text-xs font-bold text-slate-500 px-1">Họ và tên</Label>
                 <Input className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" {...register("fullName")} />
                 {errors.fullName && <p className="text-red-500 text-xs px-1">{errors.fullName.message}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Chức vụ / Role</Label>
+                <Label className="text-xs font-bold text-slate-500 px-1">Chức vụ / Role</Label>
                 <Controller
                   control={control}
                   name="role"
@@ -306,7 +306,7 @@ export function UserManagementModal({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Email</Label>
+                <Label className="text-xs font-bold text-slate-500 px-1">Email</Label>
                 <Input 
                   className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" 
                   {...register("email")} 
@@ -316,7 +316,7 @@ export function UserManagementModal({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Số điện thoại</Label>
+                <Label className="text-xs font-bold text-slate-500 px-1">Số điện thoại</Label>
                 <Input className="py-6 h-14 text-base font-medium rounded-xl border-slate-200" {...register("phone")} />
                 {errors.phone && <p className="text-red-500 text-xs px-1">{errors.phone.message}</p>}
               </div>
@@ -413,7 +413,7 @@ export function UserManagementModal({
             {/* Advanced Actions - Only in Edit mode */}
             {mode === "edit" && (
               <div className="space-y-3">
-                <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Thao tác nâng cao</Label>
+                <Label className="text-xs font-bold text-slate-400 px-1">Thao tác nâng cao</Label>
                 <div className="flex flex-wrap gap-4">
                   <Button 
                     type="button" 

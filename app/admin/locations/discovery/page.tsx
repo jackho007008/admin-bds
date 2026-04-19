@@ -8,7 +8,7 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
-  Building,
+  Home,
   AlertCircle,
   Save,
 } from "lucide-react";
@@ -21,11 +21,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 export default function DiscoveryPage() {
   const [provinces, setProvinces] = useState<LocationItem[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
-  const [allDistricts, setAllDistricts] = useState<LocationItem[]>([]);
-  const [selectedDistrictIds, setSelectedDistrictIds] = useState<number[]>([]);
+  const [allWards, setAllWards] = useState<LocationItem[]>([]);
+  const [selectedWardIds, setSelectedWardIds] = useState<number[]>([]);
   
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+  const [isLoadingWards, setIsLoadingWards] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch Provinces on mount
@@ -48,36 +48,36 @@ export default function DiscoveryPage() {
     fetchProvinces();
   }, [fetchProvinces]);
 
-  // Fetch Districts and Current Discovery when province changes
-  const fetchDistrictsAndDiscovery = useCallback(async (provinceId: number) => {
-    setIsLoadingDistricts(true);
+  // Fetch Wards and Current Discovery when province changes
+  const fetchWardsAndDiscovery = useCallback(async (provinceId: number) => {
+    setIsLoadingWards(true);
     try {
-      const [districts, discovery] = await Promise.all([
-        locationService.getDistricts(provinceId),
-        locationService.getDiscoveryDistricts(provinceId)
+      const [wards, discovery] = await Promise.all([
+        locationService.getWardsByProvince(provinceId),
+        locationService.getDiscoveryWards(provinceId)
       ]);
-      setAllDistricts(districts);
-      setSelectedDistrictIds(discovery.map((d: any) => d.districtId));
+      setAllWards(wards);
+      setSelectedWardIds(discovery.map((d: any) => d.wardId));
     } catch {
-      toast.error("Không thể tải dữ liệu quận huyện.");
+      toast.error("Không thể tải dữ liệu xã/phường.");
     } finally {
-      setIsLoadingDistricts(false);
+      setIsLoadingWards(false);
     }
   }, []);
 
   useEffect(() => {
     if (selectedProvinceId) {
-      fetchDistrictsAndDiscovery(selectedProvinceId);
+      fetchWardsAndDiscovery(selectedProvinceId);
     }
-  }, [selectedProvinceId, fetchDistrictsAndDiscovery]);
+  }, [selectedProvinceId, fetchWardsAndDiscovery]);
 
-  const toggleDistrict = (id: number) => {
-    setSelectedDistrictIds(prev => {
+  const toggleWard = (id: number) => {
+    setSelectedWardIds(prev => {
       if (prev.includes(id)) {
-        return prev.filter(d => d !== id);
+        return prev.filter(w => w !== id);
       } else {
         if (prev.length >= 4) {
-          toast.warning("Bạn chỉ được chọn tối đa 4 quận huyện cho mục Khám phá.");
+          toast.warning("Bạn chỉ được chọn tối đa 4 xã/phường cho mục Khám phá.");
           return prev;
         }
         return [...prev, id];
@@ -87,16 +87,16 @@ export default function DiscoveryPage() {
 
   const handleSave = async () => {
     if (!selectedProvinceId) return;
-    if (selectedDistrictIds.length !== 4) {
-      toast.error("Bạn phải chọn đúng 4 quận huyện để hiển thị.");
+    if (selectedWardIds.length !== 4) {
+      toast.error("Bạn phải chọn đúng 4 xã/phường để hiển thị.");
       return;
     }
 
     setIsSaving(true);
     try {
-      await locationService.updateDiscoveryDistricts(selectedProvinceId, selectedDistrictIds);
+      await locationService.updateDiscoveryWards(selectedProvinceId, selectedWardIds);
       toast.success("Đã cập nhật danh sách khám phá thành công!");
-      fetchDistrictsAndDiscovery(selectedProvinceId);
+      fetchWardsAndDiscovery(selectedProvinceId);
     } catch {
       toast.error("Không thể lưu thay đổi.");
     } finally {
@@ -118,21 +118,21 @@ export default function DiscoveryPage() {
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Quản lý khám phá</h2>
           </div>
           <p className="text-sm text-slate-500 font-medium ml-1">
-            Chọn 4 quận/huyện tiêu biểu cho mỗi tỉnh thành để hiển thị ở mục Khám phá trên App.
+            Chọn 4 xã/phường tiêu biểu cho mỗi tỉnh thành để hiển thị ở mục Khám phá trên App.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            onClick={() => selectedProvinceId && fetchDistrictsAndDiscovery(selectedProvinceId)} 
-            disabled={!selectedProvinceId || isLoadingDistricts}
+            onClick={() => selectedProvinceId && fetchWardsAndDiscovery(selectedProvinceId)} 
+            disabled={!selectedProvinceId || isLoadingWards}
             className="h-10 px-4 rounded-xl border-slate-200 font-bold hover:bg-slate-50 text-sm"
           >
-            <RefreshCcw className={isLoadingDistricts ? "w-3.5 h-3.5 mr-2 animate-spin" : "w-3.5 h-3.5 mr-2"} /> Làm mới
+            <RefreshCcw className={isLoadingWards ? "w-3.5 h-3.5 mr-2 animate-spin" : "w-3.5 h-3.5 mr-2"} /> Làm mới
           </Button>
           <Button 
-            disabled={selectedDistrictIds.length !== 4 || isSaving}
+            disabled={selectedWardIds.length !== 4 || isSaving}
             onClick={handleSave}
             className="h-10 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/10 text-sm text-white min-w-[120px]"
           >
@@ -151,7 +151,7 @@ export default function DiscoveryPage() {
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white p-2 rounded-[1.5rem] border border-slate-100 shadow-sm min-h-[400px]">
             <div className="p-4 py-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chọn Tỉnh/Thành phố</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-emerald-600">Chọn Tỉnh/Thành phố</span>
             </div>
             <div className="space-y-1 p-2">
               {isLoadingProvinces ? (
@@ -178,50 +178,50 @@ export default function DiscoveryPage() {
           </div>
         </div>
 
-        {/* District Selector Main Area */}
+        {/* Ward Selector Main Area */}
         <div className="lg:col-span-3 space-y-4">
           <Alert className="bg-emerald-50 border-emerald-100 rounded-2xl">
             <AlertCircle className="h-5 w-5 text-emerald-600" />
             <AlertTitle className="text-emerald-800 font-bold">Lưu ý cấu hình</AlertTitle>
             <AlertDescription className="text-emerald-700 text-sm font-medium">
               Bạn đang cấu hình cho <strong>{currentProvince?.name || "..."}</strong>. 
-              Vui lòng chọn <strong>đúng 4 quận/huyện</strong> để hiển thị. Hiện đã chọn: {selectedDistrictIds.length}/4.
+              Vui lòng chọn <strong>đúng 4 xã/phường</strong> để hiển thị. Hiện đã chọn: {selectedWardIds.length}/4.
             </AlertDescription>
           </Alert>
 
           <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
             <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-700">Danh sách Quận/Huyện tại {currentProvince?.name}</span>
+              <span className="text-sm font-bold text-slate-700">Danh sách Xã/Phường tại {currentProvince?.name}</span>
               <span className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-bold",
-                selectedDistrictIds.length === 4 
+                selectedWardIds.length === 4 
                   ? "bg-emerald-100 text-emerald-700" 
                   : "bg-red-100 text-red-700"
               )}>
-                {selectedDistrictIds.length === 4 ? "Đã chọn đủ 4" : `Đã chọn ${selectedDistrictIds.length}/4`}
+                {selectedWardIds.length === 4 ? "Đã chọn đủ 4" : `Đã chọn ${selectedWardIds.length}/4`}
               </span>
             </div>
 
             <div className="p-6">
-              {isLoadingDistricts ? (
+              {isLoadingWards ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <Skeleton key={i} className="h-14 w-full rounded-xl" />
                   ))}
                 </div>
-              ) : allDistricts.length === 0 ? (
+              ) : allWards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                  <Building className="w-12 h-12 mb-4 opacity-20" />
-                  <p className="font-medium text-sm">Không tìm thấy dữ liệu quận huyện.</p>
+                  <Home className="w-12 h-12 mb-4 opacity-20" />
+                  <p className="font-medium text-sm">Không tìm thấy dữ liệu xã/phường.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {allDistricts.map((district) => {
-                    const isSelected = selectedDistrictIds.includes(district.id);
+                  {allWards.map((ward) => {
+                    const isSelected = selectedWardIds.includes(ward.id);
                     return (
                       <button
-                        key={district.id}
-                        onClick={() => toggleDistrict(district.id)}
+                        key={ward.id}
+                        onClick={() => toggleWard(ward.id)}
                         className={cn(
                           "flex items-center justify-between p-4 px-6 rounded-2xl border transition-all text-left group",
                           isSelected 
@@ -230,11 +230,11 @@ export default function DiscoveryPage() {
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <Building className={cn(
+                          <Home className={cn(
                             "w-4 h-4 transition-colors",
                             isSelected ? "text-emerald-600" : "text-slate-300 group-hover:text-emerald-400"
                           )} />
-                          <span className="text-sm font-bold truncate">{district.name}</span>
+                          <span className="text-sm font-bold truncate">{ward.name}</span>
                         </div>
                         <div className={cn(
                           "shrink-0 transition-colors",

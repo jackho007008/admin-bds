@@ -106,17 +106,17 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
 
     return (
       <>
-        <DialogHeader className="p-8 pb-4">
+        <DialogHeader className="p-6 pb-2">
           <div className="flex justify-between items-start gap-4">
             <div className="space-y-3 text-left">
               <DialogTitle className="text-3xl font-bold leading-tight tracking-tight text-slate-900 line-clamp-2">
                 {property.title}
               </DialogTitle>
               <div className="flex flex-wrap gap-3 mt-4">
-                <Badge variant="outline" className={`${statusInfo.color} border px-4 py-1.5 text-sm font-semibold uppercase tracking-wider`}>
+                <Badge variant="outline" className={`${statusInfo.color} border px-4 py-1.5 text-sm font-semibold`}>
                   {statusInfo.label}
                 </Badge>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-700 px-4 py-1.5 text-sm font-semibold uppercase tracking-wider">
+                <Badge variant="secondary" className="bg-slate-100 text-slate-700 px-4 py-1.5 text-sm font-semibold">
                   {propertyTypeLabels[property.type]}
                 </Badge>
                 <div className="flex items-center gap-4 ml-2">
@@ -133,7 +133,7 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
         </DialogHeader>
 
         <ScrollArea className="flex-1">
-          <div className="p-8 pt-2 space-y-10">
+          <div className="p-6 pt-2 space-y-6">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full max-w-lg grid-cols-3 bg-slate-100/50 p-1.5 mb-8">
                 <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:shadow-sm py-3 font-bold text-base">Tổng quan</TabsTrigger>
@@ -142,14 +142,14 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
               </TabsList>
 
               <TabsContent value="overview" className="space-y-10 focus-visible:outline-none focus-visible:ring-0">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-                  <div className="lg:col-span-2 space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-start gap-6">
                       <div className="mt-1 p-4 bg-primary/10 rounded-2xl text-primary shadow-sm">
                         <DollarSign className="h-7 w-7" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Giá bán niêm yết</p>
+                        <p className="text-sm font-bold text-slate-400">Giá bán niêm yết</p>
                         <p className="text-3xl font-semibold text-primary tracking-tight">{formatCurrency(property.price)}</p>
                       </div>
                     </div>
@@ -159,7 +159,7 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                         <Maximize className="h-7 w-7" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Diện tích sử dụng thực tế</p>
+                        <p className="text-xs font-bold text-slate-400">Diện tích sử dụng thực tế</p>
                         <p className="text-2xl font-semibold text-slate-900 tracking-tight">{property.actualArea ? `${property.actualArea} m²` : "Chưa cập nhật"}</p>
                       </div>
                     </div>
@@ -169,16 +169,13 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                         <MapPin className="h-7 w-7" />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Vị trí & Địa chỉ</p>
+                        <p className="text-sm font-bold text-slate-400">Vị trí & Địa chỉ</p>
                         <p className="text-slate-900 font-semibold leading-relaxed text-xl">{property.addressRaw}</p>
                         <div className="flex flex-wrap items-center gap-3 mt-3">
-                          <Badge variant="outline" className="text-xs font-bold text-slate-500 border-slate-200 px-3 py-1 uppercase tracking-tighter">
+                          <Badge variant="outline" className="text-sm font-bold text-slate-500 border-slate-200 px-4 py-1.5">
                             {property.ward || "Xã/Phường"}
                           </Badge>
-                          <Badge variant="outline" className="text-xs font-bold text-slate-500 border-slate-200 px-3 py-1 uppercase tracking-tighter">
-                            {property.district || "Quận/Huyện"}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs font-bold text-slate-500 border-slate-200 px-3 py-1 uppercase tracking-tighter">
+                          <Badge variant="outline" className="text-sm font-bold text-slate-500 border-slate-200 px-4 py-1.5">
                             {property.province || "Tỉnh/Thành"}
                           </Badge>
                         </div>
@@ -186,8 +183,8 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                     </div>
                   </div>
 
-                  <div className="lg:col-span-3 bg-slate-50/50 rounded-[2rem] p-8 border border-slate-100 flex flex-col shadow-inner">
-                    <div className="flex items-center gap-3 mb-6 text-slate-900 font-bold text-base uppercase tracking-widest">
+                  <div className="lg:col-span-3 bg-slate-50/50 rounded-[1.5rem] p-6 border border-slate-100 flex flex-col shadow-inner">
+                    <div className="flex items-center gap-3 mb-6 text-slate-900 font-bold text-base">
                       <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>
                       <span>Mô tả chi tiết bất động sản</span>
                     </div>
@@ -200,19 +197,19 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                 </div>
 
                 {property.addressOnPaper && (
-                  <div className="bg-amber-50/30 p-8 rounded-[1.5rem] flex items-center gap-6 border border-amber-100/50 shadow-sm">
+                  <div className="bg-amber-50/30 p-6 rounded-[1.25rem] flex items-center gap-6 border border-amber-100/50 shadow-sm">
                     <div className="p-3 bg-amber-100/50 rounded-xl text-amber-600">
                       <Layout className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-amber-800 uppercase tracking-[0.2em] mb-2">Thông tin pháp lý: Địa chỉ trên sổ</p>
+                      <p className="text-sm font-bold text-amber-800 mb-2">Thông tin pháp lý: Địa chỉ trên sổ</p>
                       <p className="text-lg text-amber-900 font-semibold leading-normal">{property.addressOnPaper}</p>
                     </div>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="details" className="space-y-10 focus-visible:outline-none focus-visible:ring-0">
+              <TabsContent value="details" className="space-y-8 focus-visible:outline-none focus-visible:ring-0">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                   {[
                     { icon: Bed, label: "Phòng ngủ", value: property.bedrooms, color: "text-indigo-500", bg: "bg-indigo-50" },
@@ -220,11 +217,11 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                     { icon: Layers, label: "Số tầng", value: property.floors, color: "text-amber-500", bg: "bg-amber-50" },
                     { icon: Maximize, label: "Diện tích sổ", value: property.paperArea ? `${property.paperArea} m²` : "N/A", color: "text-emerald-500", bg: "bg-emerald-50" }
                   ].map((item, idx) => (
-                    <div key={idx} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 group">
+                    <div key={idx} className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 group">
                       <div className={`p-4 w-fit ${item.bg} rounded-2xl mb-6 group-hover:scale-105 transition-transform`}>
                         <item.icon className={`h-8 w-8 ${item.color}`} />
                       </div>
-                      <span className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-2 block">{item.label}</span>
+                      <span className="text-sm text-slate-400 font-bold mb-3 block">{item.label}</span>
                       <span className="text-3xl font-semibold text-slate-900">{item.value || 0}</span>
                     </div>
                   ))}
@@ -232,40 +229,40 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4">
                   <div className="space-y-8">
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-3">
                       <div className="w-2 h-7 bg-primary rounded-full"></div>
                       Tổ chức Pháp lý & Giấy tờ
                     </h4>
-                    <div className="grid grid-cols-1 gap-8 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
+                    <div className="grid grid-cols-1 gap-6 bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 shadow-inner">
                       <div className="flex justify-between items-center group">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loại giấy tờ</p>
-                        <Badge variant="outline" className="font-bold bg-white text-slate-700 border-slate-200 px-5 py-2 rounded-full shadow-sm text-sm uppercase tracking-wider">
+                        <p className="text-sm font-bold text-slate-400">Loại giấy tờ</p>
+                        <Badge variant="outline" className="font-bold bg-white text-slate-700 border-slate-200 px-5 py-2 rounded-full shadow-sm text-sm">
                           {property.legalStatus ? legalStatusLabels[property.legalStatus] : "Đang xác minh"}
                         </Badge>
                       </div>
                       <Separator className="bg-slate-200/50" />
                       <div className="space-y-3">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Ghi chú chi tiết</p>
+                        <p className="text-sm font-bold text-slate-400">Ghi chú chi tiết</p>
                         <p className="text-lg text-slate-700 font-medium leading-relaxed">{property.legalNote || "Không có ghi chú bổ sung về pháp lý."}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-8">
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-3">
                       <div className="w-2 h-7 bg-blue-500 rounded-full"></div>
                       Tình trạng Nội thất & Trang thiết bị
                     </h4>
-                    <div className="grid grid-cols-1 gap-8 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
+                    <div className="grid grid-cols-1 gap-6 bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 shadow-inner">
                       <div className="flex justify-between items-center group">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Mức độ hoàn thiện</p>
-                        <Badge variant="outline" className="font-bold bg-white text-slate-700 border-slate-200 px-5 py-2 rounded-full shadow-sm text-sm uppercase tracking-wider">
+                        <p className="text-sm font-bold text-slate-400">Mức độ hoàn thiện</p>
+                        <Badge variant="outline" className="font-bold bg-white text-slate-700 border-slate-200 px-5 py-2 rounded-full shadow-sm text-sm">
                           {property.interiorStatus ? interiorStatusLabels[property.interiorStatus] : "Đang cập nhật"}
                         </Badge>
                       </div>
                       <Separator className="bg-slate-200/50" />
                       <div className="space-y-3">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Ghi chú hiện trạng</p>
+                        <p className="text-sm font-bold text-slate-400">Ghi chú hiện trạng</p>
                         <p className="text-lg text-slate-700 font-medium leading-relaxed">{property.interiorNote || "Chưa có thông tin về trang thiết bị nội thất."}</p>
                       </div>
                     </div>
@@ -273,38 +270,38 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                 </div>
 
                 <div className="pt-4 grid grid-cols-2 gap-8">
-                  <div className="flex justify-between items-center p-8 bg-slate-50/50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-slate-50">
+                  <div className="flex justify-between items-center p-6 bg-slate-50/50 rounded-[1.25rem] border border-slate-100 transition-all hover:bg-slate-50">
                     <div className="flex items-center gap-4">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Chiều ngang mặt tiền</p>
+                      <p className="text-sm font-bold text-slate-400">Chiều ngang mặt tiền</p>
                     </div>
                     <span className="text-slate-900 font-semibold text-2xl">{property.frontageWidth ? `${property.frontageWidth}m` : "—"}</span>
                   </div>
-                  <div className="flex justify-between items-center p-8 bg-slate-50/50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-slate-50">
+                  <div className="flex justify-between items-center p-6 bg-slate-50/50 rounded-[1.25rem] border border-slate-100 transition-all hover:bg-slate-50">
                     <div className="flex items-center gap-4">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Độ rộng đường vào</p>
+                      <p className="text-sm font-bold text-slate-400">Độ rộng đường vào</p>
                     </div>
                     <span className="text-slate-900 font-semibold text-2xl">{property.roadWidth ? `${property.roadWidth}m` : "—"}</span>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="info" className="space-y-10 focus-visible:outline-none focus-visible:ring-0">
+              <TabsContent value="info" className="space-y-8 focus-visible:outline-none focus-visible:ring-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-10">
+                  <div className="space-y-6">
                     <div className="space-y-6">
-                      <h4 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-4">
+                      <h4 className="text-sm font-bold text-slate-900 flex items-center gap-4">
                         <User className="h-5 w-5 text-slate-300" /> Đại diện Đăng tin
                       </h4>
                       {property.creator ? (
-                        <div className="flex items-center gap-6 p-8 border rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-100 hover:shadow-md transition-all group">
+                        <div className="flex items-center gap-6 p-6 border rounded-[1.5rem] bg-white shadow-sm ring-1 ring-slate-100 hover:shadow-md transition-all group">
                           <div className="h-20 w-20 rounded-[1.25rem] bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl group-hover:scale-105 transition-transform">
                             {property.creator.fullName.charAt(0)}
                           </div>
                           <div className="space-y-2">
                             <p className="font-semibold text-slate-900 text-2xl tracking-tight leading-none">{property.creator.fullName}</p>
-                            <Badge variant="secondary" className="text-xs bg-slate-50 text-slate-500 font-bold px-3 py-1 border border-slate-100 uppercase tracking-widest">
+                            <Badge variant="secondary" className="text-sm bg-slate-50 text-slate-500 font-bold px-4 py-1.5 border border-slate-100">
                               Chức vụ: {property.creator.role}
                             </Badge>
                           </div>
@@ -317,19 +314,19 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                     </div>
 
                     <div className="space-y-6">
-                      <h4 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-4">
+                      <h4 className="text-sm font-bold text-slate-900 flex items-center gap-4">
                         <Calendar className="h-5 w-5 text-slate-300" /> Bản ghi Lịch sử hệ thống
                       </h4>
-                      <div className="space-y-3 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
+                      <div className="space-y-3 bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 shadow-inner">
                         <div className="flex justify-between text-base py-4 border-b border-slate-200/50">
-                          <span className="font-bold text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                          <span className="font-bold text-slate-400 flex items-center gap-4">
                             <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                             Khởi tạo lúc
                           </span>
                           <span className="font-semibold text-slate-700">{format(new Date(property.createdAt), "HH:mm, dd/MM/yyyy", { locale: vi })}</span>
                         </div>
                         <div className="flex justify-between text-base py-4 pt-5">
-                          <span className="font-bold text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                          <span className="font-bold text-slate-400 flex items-center gap-4">
                             <div className="w-2 h-2 rounded-full bg-primary/50"></div>
                             Hiệu chỉnh lần cuối
                           </span>
@@ -340,20 +337,20 @@ export function PropertyDetailModal({ property, isOpen, onClose, isLoading }: Pr
                   </div>
 
                   <div className="space-y-6">
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-4">
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-4">
                       <Tag className="h-5 w-5 text-slate-300" /> Hệ thống Thẻ & Đặc điểm (Tags)
                     </h4>
-                    <div className="flex flex-wrap gap-4 bg-slate-50/50 p-10 rounded-[2rem] border border-slate-100 min-h-[250px] content-start shadow-inner">
+                    <div className="flex flex-wrap gap-4 bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 min-h-[150px] content-start shadow-inner">
                       {property.tags && property.tags.length > 0 ? (
                         property.tags.map((tag: string, index: number) => (
-                          <Badge key={index} variant="secondary" className="bg-white border-2 border-slate-100 text-slate-700 font-semibold px-5 py-3 text-sm shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-default rounded-full">
-                            #{tag}
+                          <Badge key={index} variant="secondary" className="bg-white border-2 border-slate-100 text-slate-700 font-semibold px-5 py-2 text-sm shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-default rounded-full">
+                            {tag}
                           </Badge>
                         ))
                       ) : (
-                        <div className="w-full flex flex-col items-center justify-center gap-4 opacity-30 mt-12">
+                        <div className="w-full flex flex-col items-center justify-center gap-4 opacity-30 mt-8">
                           <Tag className="h-10 w-10" />
-                          <p className="text-sm font-bold uppercase tracking-widest">Không có nhãn phân loại</p>
+                          <p className="text-sm font-bold">Không có nhãn phân loại</p>
                         </div>
                       )}
                     </div>
