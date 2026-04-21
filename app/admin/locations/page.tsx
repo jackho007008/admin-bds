@@ -27,15 +27,15 @@ export default function LocationsPage() {
   const [search, setSearch] = useState("");
   
   // Cache for child items
-  const [wardsCache, setWardsCache] = useState<Record<number, LocationItem[]>>({});
+  const [wardsCache, setWardsCache] = useState<Record<string, LocationItem[]>>({});
   
   // UI State
-  const [expandedProvinces, setExpandedProvinces] = useState<Set<number>>(new Set());
+  const [expandedProvinces, setExpandedProvinces] = useState<Set<string>>(new Set());
   
   // Pending changes: state of toggles before saving
   const [pendingChanges, setPendingChanges] = useState<{
-    provinces: Record<number, { isActive: boolean; cascade: boolean }>;
-    wards: Record<number, { isActive: boolean }>;
+    provinces: Record<string, { isActive: boolean; cascade: boolean }>;
+    wards: Record<string, { isActive: boolean }>;
   }>({ provinces: {}, wards: {} });
 
   const fetchProvinces = useCallback(async () => {
@@ -56,50 +56,50 @@ export default function LocationsPage() {
     fetchProvinces();
   }, [fetchProvinces]);
 
-  const fetchWards = async (provinceId: number, force = false) => {
-    if (!force && wardsCache[provinceId]) return;
+  const fetchWards = async (provinceCode: string, force = false) => {
+    if (!force && wardsCache[provinceCode]) return;
     try {
-      const data = await locationService.getWardsByProvince(provinceId);
-      setWardsCache(prev => ({ ...prev, [provinceId]: data }));
+      const data = await locationService.getWardsByProvince(provinceCode);
+      setWardsCache(prev => ({ ...prev, [provinceCode]: data }));
     } catch {
       toast.error("Không thể tải danh sách phường xã.");
     }
   };
 
-  const toggleProvinceExpansion = (id: number) => {
+  const toggleProvinceExpansion = (code: string) => {
     setExpandedProvinces(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
+      if (next.has(code)) next.delete(code);
       else {
-        next.add(id);
-        fetchWards(id);
+        next.add(code);
+        fetchWards(code);
       }
       return next;
     });
   };
 
-  const handleProvinceToggle = (provinceId: number, currentActive: boolean) => {
+  const handleProvinceToggle = (provinceCode: string, currentActive: boolean) => {
     const nextActive = !currentActive;
     setPendingChanges(prev => {
-      const nextProvinces = { ...prev.provinces, [provinceId]: { isActive: nextActive, cascade: true } };
+      const nextProvinces = { ...prev.provinces, [provinceCode]: { isActive: nextActive, cascade: true } };
       const nextWards = { ...prev.wards };
       
       // Cascade to cached items
-      const wards = wardsCache[provinceId];
+      const wards = wardsCache[provinceCode];
       if (wards) {
         wards.forEach(w => {
-          nextWards[w.id] = { isActive: nextActive };
+          nextWards[w.code] = { isActive: nextActive };
         });
       }
       return { ...prev, provinces: nextProvinces, wards: nextWards };
     });
   };
 
-  const handleWardToggle = (wardId: number, currentActive: boolean) => {
+  const handleWardToggle = (wardCode: string, currentActive: boolean) => {
     const nextActive = !currentActive;
     setPendingChanges(prev => ({
       ...prev,
-      wards: { ...prev.wards, [wardId]: { isActive: nextActive } }
+      wards: { ...prev.wards, [wardCode]: { isActive: nextActive } }
     }));
   };
 
@@ -111,8 +111,8 @@ export default function LocationsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const pUpdates = Object.entries(pendingChanges.provinces).map(([id, val]) => ({ id: Number(id), ...val }));
-      const wUpdates = Object.entries(pendingChanges.wards).map(([id, val]) => ({ id: Number(id), ...val }));
+      const pUpdates = Object.entries(pendingChanges.provinces).map(([code, val]) => ({ code, ...val }));
+      const wUpdates = Object.entries(pendingChanges.wards).map(([code, val]) => ({ code, ...val }));
 
       await locationService.updateLocationsBulk({
         provinces: pUpdates.length > 0 ? pUpdates : undefined,
@@ -123,9 +123,8 @@ export default function LocationsPage() {
       await fetchProvinces(); // Refresh provinces
       
       // Re-fetch wards for all currently expanded provinces to ensure UI sync
-      // We don't clear setWardsCache({}) here to avoid race conditions with functional updates
-      expandedProvinces.forEach(id => {
-        fetchWards(id, true); // Force re-fetch bypassing cache
+      expandedProvinces.forEach(code => {
+        fetchWards(code, true); // Force re-fetch bypassing cache
       });
     } catch {
       toast.error("Không thể lưu cấu hình địa chỉ.");
@@ -150,7 +149,7 @@ export default function LocationsPage() {
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Quản lý địa chỉ</h2>
           </div>
           <p className="text-sm text-slate-500 font-medium ml-1">
-            Bật/tắt hiển thị Tỉnh thành, Quận huyện và Phường xã trên ứng dụng.
+            Bật/tắt hiển thị Tỉnh thành và Phường xã trên ứng dụng.
           </p>
         </div>
 
@@ -206,12 +205,12 @@ export default function LocationsPage() {
           ) : (
             <div className="divide-y divide-slate-50">
               {filteredProvinces.map((province) => {
-                const isExpanded = expandedProvinces.has(province.id);
-                const isPending = pendingChanges.provinces[province.id];
+                const isExpanded = expandedProvinces.has(province.code);
+                const isPending = pendingChanges.provinces[province.code];
                 const isActive = isPending ? isPending.isActive : province.isActive;
 
                 return (
-                  <div key={province.id} className="group">
+                  <div key={province.code} className="group">
                     {/* Province Row */}
                     <div className={cn(
                       "flex items-center justify-between p-4 px-6 rounded-2xl transition-all",
@@ -219,7 +218,7 @@ export default function LocationsPage() {
                     )}>
                       <div className="flex items-center gap-4 flex-1">
                         <button 
-                          onClick={() => toggleProvinceExpansion(province.id)}
+                          onClick={() => toggleProvinceExpansion(province.code)}
                           className="p-1 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200 shadow-none hover:shadow-sm"
                         >
                           {isExpanded ? (
@@ -246,7 +245,7 @@ export default function LocationsPage() {
                       </div>
                       
                       <button 
-                        onClick={() => handleProvinceToggle(province.id, isActive)}
+                        onClick={() => handleProvinceToggle(province.code, isActive)}
                         className={cn(
                           "p-2 rounded-full transition-all",
                           isActive ? "text-emerald-600 hover:bg-emerald-50" : "text-slate-300 hover:bg-slate-100"
@@ -263,23 +262,23 @@ export default function LocationsPage() {
                     {/* Wards Level */}
                     {isExpanded && (
                       <div className="pl-16 pr-6 pb-6 space-y-4 mt-1">
-                        {wardsCache[province.id] === undefined ? (
+                        {wardsCache[province.code] === undefined ? (
                           <div className="py-4 flex justify-center">
                             <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
                           </div>
-                        ) : wardsCache[province.id]?.length === 0 ? (
+                        ) : wardsCache[province.code]?.length === 0 ? (
                           <div className="py-4 text-center text-slate-400 text-sm italic">
                             Không có dữ liệu phường xã cho tỉnh này.
                           </div>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {wardsCache[province.id]?.map((ward) => {
-                              const isWardPending = pendingChanges.wards[ward.id];
+                            {wardsCache[province.code]?.map((ward) => {
+                              const isWardPending = pendingChanges.wards[ward.code];
                               const isWardActive = isWardPending ? isWardPending.isActive : ward.isActive;
 
                               return (
                                 <div 
-                                  key={ward.id}
+                                  key={ward.code}
                                   className={cn(
                                     "flex items-center justify-between p-3 px-5 rounded-2xl border transition-all",
                                     isWardActive 
@@ -296,7 +295,7 @@ export default function LocationsPage() {
                                     {isWardPending && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />}
                                   </div>
                                   <button 
-                                    onClick={() => handleWardToggle(ward.id, isWardActive)}
+                                    onClick={() => handleWardToggle(ward.code, isWardActive)}
                                     className={cn(
                                       "p-1.5 rounded-full transition-all shrink-0",
                                       isWardActive ? "text-emerald-500 hover:bg-emerald-50" : "text-slate-200 hover:bg-slate-100"

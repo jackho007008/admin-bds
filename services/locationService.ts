@@ -2,44 +2,45 @@ import axiosInstance from "@/lib/axios";
 
 export interface LocationItem {
   id: number;
+  code: string;
   name: string;
   isActive: boolean;
 }
 
 export interface LocationUpdate {
-  id: number;
+  code: string;
   isActive: boolean;
   cascade?: boolean;
 }
 
 export interface BulkLocationUpdate {
   provinces?: LocationUpdate[];
-  wards?: { id: number; isActive: boolean }[];
+  wards?: { code: string; isActive: boolean }[];
 }
 
 export const locationService = {
   getProvinces: async (): Promise<LocationItem[]> => {
-    const response = await axiosInstance.get<{ data: LocationItem[] }>("/locations/admin/provinces");
+    const response = await axiosInstance.get<{ data: LocationItem[] }>("/api/v2/locations/admin/provinces");
     return response.data.data;
   },
 
-  getWardsByProvince: async (provinceId: number): Promise<LocationItem[]> => {
-    const response = await axiosInstance.get<{ data: LocationItem[] }>(`/locations/admin/provinces/${provinceId}/wards`);
+  getWardsByProvince: async (provinceCode: string): Promise<LocationItem[]> => {
+    const response = await axiosInstance.get<{ data: LocationItem[] }>(`/api/v2/locations/admin/provinces/${provinceCode}/wards`);
     return response.data.data;
   },
 
   updateLocationsBulk: async (data: BulkLocationUpdate) => {
-    const response = await axiosInstance.patch("/locations/admin/bulk-status", data);
+    const response = await axiosInstance.patch("/api/v2/locations/admin/bulk-status", data);
     return response.data;
   },
 
-  getDiscoveryWards: async (provinceId: number) => {
-    const response = await axiosInstance.get<{ data: any[] }>(`/locations/discovery/${provinceId}`);
+  getDiscoveryWards: async (provinceCode: string) => {
+    const response = await axiosInstance.get<{ data: any[] }>(`/api/v2/locations/discovery/${provinceCode}`);
     return response.data.data;
   },
 
-  updateDiscoveryWards: async (provinceId: number, wardIds: number[]) => {
-    const response = await axiosInstance.patch(`/locations/admin/discovery/${provinceId}`, { wardIds });
+  updateDiscoveryWards: async (provinceCode: string, wardIds: number[]) => {
+    const response = await axiosInstance.patch(`/api/v2/locations/admin/discovery/${provinceCode}`, { wardIds });
     return response.data;
   },
 };

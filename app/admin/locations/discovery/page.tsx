@@ -20,7 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function DiscoveryPage() {
   const [provinces, setProvinces] = useState<LocationItem[]>([]);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<string | null>(null);
   const [allWards, setAllWards] = useState<LocationItem[]>([]);
   const [selectedWardIds, setSelectedWardIds] = useState<number[]>([]);
   
@@ -34,27 +34,27 @@ export default function DiscoveryPage() {
     try {
       const data = await locationService.getProvinces();
       setProvinces(data);
-      if (data.length > 0 && !selectedProvinceId) {
-        setSelectedProvinceId(data[0].id);
+      if (data.length > 0 && !selectedProvinceCode) {
+        setSelectedProvinceCode(data[0].code);
       }
     } catch {
       toast.error("Không thể tải danh sách tỉnh thành.");
     } finally {
       setIsLoadingProvinces(false);
     }
-  }, [selectedProvinceId]);
+  }, [selectedProvinceCode]);
 
   useEffect(() => {
     fetchProvinces();
   }, [fetchProvinces]);
 
   // Fetch Wards and Current Discovery when province changes
-  const fetchWardsAndDiscovery = useCallback(async (provinceId: number) => {
+  const fetchWardsAndDiscovery = useCallback(async (provinceCode: string) => {
     setIsLoadingWards(true);
     try {
       const [wards, discovery] = await Promise.all([
-        locationService.getWardsByProvince(provinceId),
-        locationService.getDiscoveryWards(provinceId)
+        locationService.getWardsByProvince(provinceCode),
+        locationService.getDiscoveryWards(provinceCode)
       ]);
       setAllWards(wards);
       setSelectedWardIds(discovery.map((d: any) => d.wardId));
@@ -66,10 +66,10 @@ export default function DiscoveryPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedProvinceId) {
-      fetchWardsAndDiscovery(selectedProvinceId);
+    if (selectedProvinceCode) {
+      fetchWardsAndDiscovery(selectedProvinceCode);
     }
-  }, [selectedProvinceId, fetchWardsAndDiscovery]);
+  }, [selectedProvinceCode, fetchWardsAndDiscovery]);
 
   const toggleWard = (id: number) => {
     setSelectedWardIds(prev => {
@@ -77,7 +77,7 @@ export default function DiscoveryPage() {
         return prev.filter(w => w !== id);
       } else {
         if (prev.length >= 4) {
-          toast.warning("Bạn chỉ được chọn tối đa 4 xã/phường cho mục Khám phá.");
+          toast.warning("Bạn chỉ được chọn đúng 4 xã/phường cho mục Khám phá.");
           return prev;
         }
         return [...prev, id];
@@ -86,7 +86,7 @@ export default function DiscoveryPage() {
   };
 
   const handleSave = async () => {
-    if (!selectedProvinceId) return;
+    if (!selectedProvinceCode) return;
     if (selectedWardIds.length !== 4) {
       toast.error("Bạn phải chọn đúng 4 xã/phường để hiển thị.");
       return;
@@ -94,9 +94,9 @@ export default function DiscoveryPage() {
 
     setIsSaving(true);
     try {
-      await locationService.updateDiscoveryWards(selectedProvinceId, selectedWardIds);
+      await locationService.updateDiscoveryWards(selectedProvinceCode, selectedWardIds);
       toast.success("Đã cập nhật danh sách khám phá thành công!");
-      fetchWardsAndDiscovery(selectedProvinceId);
+      fetchWardsAndDiscovery(selectedProvinceCode);
     } catch {
       toast.error("Không thể lưu thay đổi.");
     } finally {
@@ -104,7 +104,7 @@ export default function DiscoveryPage() {
     }
   };
 
-  const currentProvince = provinces.find(p => p.id === selectedProvinceId);
+  const currentProvince = provinces.find(p => p.code === selectedProvinceCode);
 
   return (
     <div className="space-y-6 pb-8">
@@ -125,8 +125,8 @@ export default function DiscoveryPage() {
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            onClick={() => selectedProvinceId && fetchWardsAndDiscovery(selectedProvinceId)} 
-            disabled={!selectedProvinceId || isLoadingWards}
+            onClick={() => selectedProvinceCode && fetchWardsAndDiscovery(selectedProvinceCode)} 
+            disabled={!selectedProvinceCode || isLoadingWards}
             className="h-10 px-4 rounded-xl border-slate-200 font-bold hover:bg-slate-50 text-sm"
           >
             <RefreshCcw className={isLoadingWards ? "w-3.5 h-3.5 mr-2 animate-spin" : "w-3.5 h-3.5 mr-2"} /> Làm mới
@@ -161,11 +161,11 @@ export default function DiscoveryPage() {
               ) : (
                 provinces.map((province) => (
                   <button
-                    key={province.id}
-                    onClick={() => setSelectedProvinceId(province.id)}
+                    key={province.code}
+                    onClick={() => setSelectedProvinceCode(province.code)}
                     className={cn(
                       "w-full text-left p-3.5 px-5 rounded-xl text-sm font-bold transition-all",
-                      selectedProvinceId === province.id 
+                      selectedProvinceCode === province.code 
                         ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20" 
                         : "text-slate-600 hover:bg-slate-50"
                     )}
