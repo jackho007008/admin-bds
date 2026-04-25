@@ -160,6 +160,25 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
   const [wards, setWards] = React.useState<LocationItem[]>([]);
   const [availableTags, setAvailableTags] = React.useState<Tag[]>([]);
 
+  const fetchWardsForProvinceId = React.useCallback(
+    async (provinceId?: number | null) => {
+      if (!provinceId) {
+        setWards([]);
+        return;
+      }
+
+      const province = provinces.find((item) => item.id === provinceId);
+      if (!province) {
+        setWards([]);
+        return;
+      }
+
+      const data = await locationService.getWardsByProvince(province.code);
+      setWards(data);
+    },
+    [provinces]
+  );
+
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -210,11 +229,6 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
         wardId: property.wardId || null,
       });
 
-      // Fetch initial wards if province exists (2-level address)
-      if (property.provinceId) {
-        locationService.getWardsByProvince(property.provinceId).then(setWards);
-      }
-
       // Reset image states
       setCurrentImages(property.images || []);
       setNewImages([]);
@@ -222,6 +236,20 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
       setDeletedImageIds([]);
     }
   }, [property, isOpen, reset]);
+
+  useEffect(() => {
+    if (property?.provinceId && isOpen && provinces.length > 0) {
+      fetchWardsForProvinceId(property.provinceId).catch((error) => {
+        console.error("Fetch wards error:", error);
+        setWards([]);
+      });
+      return;
+    }
+
+    if (!property?.provinceId) {
+      setWards([]);
+    }
+  }, [fetchWardsForProvinceId, isOpen, property?.provinceId, provinces.length]);
 
   const onSubmit = async (values: PropertyFormValues) => {
     if (!property) return;
@@ -437,8 +465,10 @@ export function PropertyEditModal({ property, isOpen, onClose, onSave }: Propert
                                 field.onChange(id);
                                 // Reset ward select
                                 setValue("wardId", null);
-                                setWards([]);
-                                if (id) locationService.getWardsByProvince(id).then(setWards);
+                                fetchWardsForProvinceId(id).catch((error) => {
+                                  console.error("Fetch wards error:", error);
+                                  setWards([]);
+                                });
                               }} 
                               value={field.value?.toString() || ""}
                               items={provinces.map(p => ({ value: p.id.toString(), label: p.name }))}
