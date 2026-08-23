@@ -22,8 +22,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (user.role !== "ADMIN") {
-      useAuthStore.getState().clearAuth();
-      router.replace("/login");
+      router.replace("/");
     }
   }, [hydrated, isAuthenticated, user, router]);
 

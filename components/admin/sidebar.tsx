@@ -4,31 +4,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { 
-  LayoutDashboard, 
-  Users, 
-  UserCheck,
-  Briefcase,
   MapPin,
-  Compass,
-  Tags,
-
   Building2,
-  FileText,
   LogOut,
-  Settings
+  Users,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-  { icon: FileText, label: "Quản lý bài đăng", href: "/admin/posts" },
-  { icon: Users, label: "Quản lý user", href: "/admin/users" },
-  { icon: UserCheck, label: "Duyệt nhân viên", href: "/admin/users/pending" },
-  { icon: Briefcase, label: "Quản lý phòng ban", href: "/admin/departments" },
   { icon: MapPin, label: "Quản lý địa chỉ", href: "/admin/locations" },
-  { icon: Compass, label: "Quản lý khám phá", href: "/admin/locations/discovery" },
-  { icon: Tags, label: "Quản lý tag", href: "/admin/tags" },
-  { icon: Settings, label: "Cấu hình hệ thống", href: "/admin/settings" },
+  { icon: Users, label: "Quản lý chủ villa", href: "/admin/villa-owners" },
+  { icon: ShieldCheck, label: "Quản lý sales", href: "/admin/sales" },
 ];
 
 export function Sidebar() {
@@ -57,8 +44,8 @@ export function Sidebar() {
             href={item.href}
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              pathname === item.href 
-                ? "bg-primary text-white" 
+              pathname === item.href
+                ? "bg-primary text-white"
                 : "text-white/70 hover:bg-[#1a7a3a]/40 hover:text-white"
             )}
           >

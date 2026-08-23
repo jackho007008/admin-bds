@@ -17,16 +17,11 @@ export default function LoginPage() {
       authService.login(email, pass),
     onSuccess: (data) => {
       const { user, access_token } = data;
-      
-      if (user.role !== 'ADMIN') {
-        toast.error("Chỉ tài khoản Admin mới được phép đăng nhập trang quản trị.");
-        return;
-      }
 
       setAuth(user, access_token);
       
       toast.success("Đăng nhập thành công!");
-      router.replace("/admin");
+      router.replace(user.role === "ADMIN" ? "/admin/villa-owners" : "/");
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
