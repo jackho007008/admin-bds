@@ -6,12 +6,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AppModalBody,
+  AppModalContent,
+  AppModalDescription,
+  AppModalFooter,
+  AppModalHeader,
+  AppModalTitle,
+} from "@/components/ui/app-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,7 +144,7 @@ function CustomerAccountModalBody({
 
   return (
     <>
-      <div className="space-y-5 px-8 py-7">
+      <AppModalBody>
         {hasAccount ? (
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
             Tài khoản hiện tại:{" "}
@@ -197,9 +200,9 @@ function CustomerAccountModalBody({
             />
           </div>
         </div>
-      </div>
+      </AppModalBody>
 
-      <DialogFooter className="border-t border-slate-100 bg-slate-50/70 px-8 py-6 sm:justify-between">
+      <AppModalFooter>
         <Button
           type="button"
           variant="ghost"
@@ -217,7 +220,7 @@ function CustomerAccountModalBody({
           {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {hasAccount ? "Reset mật khẩu" : "Tạo tài khoản"}
         </Button>
-      </DialogFooter>
+      </AppModalFooter>
     </>
   );
 }
@@ -233,23 +236,23 @@ export function CustomerAccountModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-xl rounded-[2rem] border-none p-0 shadow-2xl">
-        <DialogHeader className="border-b border-slate-100 bg-slate-50/70 px-8 py-7 text-left">
+      <AppModalContent className="sm:max-w-xl">
+        <AppModalHeader>
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
             <ShieldCheck className="h-4 w-4" />
             Tài khoản chủ villa
           </div>
-          <DialogTitle className="pt-3 text-2xl font-bold text-slate-900">
+          <AppModalTitle className="pt-3">
             {accountStatus?.hasAccount
               ? "Reset mật khẩu"
               : "Thiết lập tài khoản cho chủ villa"}
-          </DialogTitle>
-          <DialogDescription className="text-base leading-7 text-slate-500">
+          </AppModalTitle>
+          <AppModalDescription>
             {customerName
               ? `Chủ villa đang thao tác: ${customerName}`
               : "Chọn chủ villa trước khi cấu hình tài khoản."}
-          </DialogDescription>
-        </DialogHeader>
+          </AppModalDescription>
+        </AppModalHeader>
 
         {isOpen ? (
           <CustomerAccountModalBody
@@ -260,7 +263,7 @@ export function CustomerAccountModal({
             accountStatus={accountStatus}
           />
         ) : null}
-      </DialogContent>
+      </AppModalContent>
     </Dialog>
   );
 }

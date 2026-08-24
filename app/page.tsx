@@ -36,9 +36,11 @@ function CustomerHome() {
 export default function HomePage() {
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const isAdmin = user?.role === "ADMIN";
+  const isOwner = user?.role === "DAU_CHU";
   const isCustomer = user?.role === "DAU_KHACH";
+  const canOpenAdmin = isAdmin || isOwner;
 
-  if (isAuthenticated && isCustomer) {
+  if (isAuthenticated && (isCustomer || isOwner || isAdmin)) {
     return <CustomerHome />;
   }
 
@@ -69,7 +71,7 @@ export default function HomePage() {
                 </Button>
               ) : null}
 
-              {isAdmin ? (
+              {canOpenAdmin ? (
                 <Button asChild className="rounded-2xl px-6">
                   <Link href="/admin/villa-owners">Vào quản trị</Link>
                 </Button>
@@ -106,7 +108,9 @@ export default function HomePage() {
                     {isAuthenticated
                       ? isAdmin
                         ? "Đang đăng nhập bằng tài khoản admin"
-                        : "Đang đăng nhập bằng tài khoản khách"
+                        : isOwner
+                          ? "Đang đăng nhập bằng tài khoản chủ villa"
+                          : "Đang đăng nhập bằng tài khoản khách"
                       : "Chưa đăng nhập"}
                   </div>
                 </div>

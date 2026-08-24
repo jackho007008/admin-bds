@@ -67,6 +67,7 @@ export interface Villa {
   customerId: string;
   name: string;
   normalizedName: string;
+  priceZone?: string | null;
   floors?: number | null;
   bedrooms?: number | null;
   toilets?: number | null;
@@ -82,6 +83,21 @@ export interface Villa {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface MyVilla extends Villa {
+  latestRate?: {
+    id: string;
+    monthValue?: string | null;
+    stayDate?: string | null;
+    dayLabel: string;
+    rawValue: string;
+    price?: number | null;
+    guestName?: string | null;
+    note?: string | null;
+    sourceSheetName: string;
+    sourceCellRef: string;
+  } | null;
 }
 
 export interface UpdateVillaPayload {
@@ -163,6 +179,10 @@ export interface VillaImportPreviewResponse {
       extractedRecordCount: number;
       sampleVillaNames: string[];
     };
+    inferredVillaZones: Array<{
+      villaName: string;
+      priceZone: string;
+    }>;
     sampleRecords: Array<Record<string, unknown>>;
   };
 }
@@ -237,6 +257,11 @@ export const villaImportService = {
     const response = await axiosInstance.get<Villa[]>(
       `/villa-import/customers/${customerId}/villas`
     );
+    return response.data;
+  },
+
+  listMyVillas: async (): Promise<MyVilla[]> => {
+    const response = await axiosInstance.get<MyVilla[]>("/villa-import/my-villas");
     return response.data;
   },
 

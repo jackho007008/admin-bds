@@ -11,7 +11,7 @@ export function Logo({ width = 180, height = 120, className }: LogoProps) {
     <div className={className}>
       <Image
         src="/images/logo.png"
-        alt="Nhat Phat Land Logo"
+        alt="Villa Booking Logo"
         width={width}
         height={height}
         priority

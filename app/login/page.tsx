@@ -21,7 +21,11 @@ export default function LoginPage() {
       setAuth(user, access_token);
       
       toast.success("Đăng nhập thành công!");
-      router.replace(user.role === "ADMIN" ? "/admin/villa-owners" : "/");
+      router.replace(
+        user.role === "ADMIN" || user.role === "DAU_CHU"
+          ? "/admin/villa-owners"
+          : "/",
+      );
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {

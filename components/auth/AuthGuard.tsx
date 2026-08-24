@@ -1,16 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+
+const ADMIN_ROLES = new Set(["ADMIN", "DAU_CHU"]);
+const DAU_CHU_ALLOWED_PATHS = new Set([
+  "/admin",
+  "/admin/villa-owners",
+  "/admin/posts",
+]);
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
+    const frameId = window.requestAnimationFrame(() => {
+      setHydrated(true);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   useEffect(() => {
@@ -21,10 +33,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (user.role !== "ADMIN") {
+    if (!ADMIN_ROLES.has(user.role)) {
       router.replace("/");
+      return;
     }
-  }, [hydrated, isAuthenticated, user, router]);
+
+    if (user.role === "DAU_CHU" && !DAU_CHU_ALLOWED_PATHS.has(pathname)) {
+      router.replace("/admin/villa-owners");
+    }
+  }, [hydrated, isAuthenticated, pathname, router, user]);
 
   if (!hydrated) {
     return (
@@ -37,7 +54,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated || !user || user.role !== "ADMIN") {
+  if (!isAuthenticated || !user || !ADMIN_ROLES.has(user.role)) {
+    return null;
+  }
+
+  if (user.role === "DAU_CHU" && !DAU_CHU_ALLOWED_PATHS.has(pathname)) {
     return null;
   }
 

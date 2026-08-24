@@ -1,74 +1,72 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+import { useAuthStore } from "@/store/authStore";
 import { VillaSheetImportModal } from "@/components/organisms/VillaSheetImportModal";
 import { CustomerAccountModal } from "@/components/organisms/CustomerAccountModal";
+import { VillaImportOwnersSection } from "@/components/admin/villa-import-owners-section";
+import { VillaImportSalesSection } from "@/components/admin/villa-import-sales-section";
+import { VillaImportCreateOwnerModal } from "@/components/admin/villa-import-create-owner-modal";
+import { VillaImportCreateSaleModal } from "@/components/admin/villa-import-create-sale-modal";
+import { VillaImportOwnerDetailsModal } from "@/components/admin/villa-import-owner-details-modal";
+import type {
+  DetailsTab,
+  GroupedVillaRate,
+} from "@/components/admin/villa-import-management.types";
 import { villaImportService } from "@/services/villaImportService";
-import {
-  CalendarRange,
-  ChevronDown,
-  DatabaseZap,
-  Grid2X2,
-  KeyRound,
-  Loader2,
-  Mail,
-  Sheet,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
 
-const highlights = [
-  {
-    title: "Tạo chủ villa trước",
-    description:
-      "Mỗi file sheet sẽ đi theo một chủ villa riêng để quản lý danh sách villa rõ ràng.",
-    icon: Users,
-  },
-  {
-    title: "Chọn row hoặc column",
-    description:
-      "Bạn chọn đúng hàng hoặc cột tên villa, backend sẽ đọc Google Sheet và upsert theo ô nguồn.",
-    icon: Grid2X2,
-  },
-  {
-    title: "Lưu source cell",
-    description:
-      "Mỗi villa được gắn với ô như E6 hoặc A12 để tránh upsert sai theo tên.",
-    icon: DatabaseZap,
-  },
-];
+function getErrorMessage(error: unknown, fallback: string) {
+  const axiosError = error as AxiosError<{ message?: string | string[] }>;
+  const message = axiosError.response?.data?.message;
+
+  if (Array.isArray(message)) {
+    return message[0] || fallback;
+  }
+
+  return message || fallback;
+}
 
 export function VillaImportManagementContent({
   mode,
 }: {
   mode: "owners" | "sales";
 }) {
+  const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateOwnerModalOpen, setIsCreateOwnerModalOpen] = useState(false);
+  const [isSheetConfigModalOpen, setIsSheetConfigModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
+  const [customerAccountEmail, setCustomerAccountEmail] = useState("");
+  const [customerAccountPassword, setCustomerAccountPassword] = useState("");
+  const [customerAccountFullName, setCustomerAccountFullName] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [expandedVillaId, setExpandedVillaId] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [detailsTab, setDetailsTab] = useState<DetailsTab>("villas");
+  const [isCreateSaleModalOpen, setIsCreateSaleModalOpen] = useState(false);
   const [saleFullName, setSaleFullName] = useState("");
   const [saleEmail, setSaleEmail] = useState("");
   const [salePassword, setSalePassword] = useState("");
 
   const isOwnersMode = mode === "owners";
   const isSalesMode = mode === "sales";
+  const isOwnerAccount = user?.role === "DAU_CHU";
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["villaImportCustomers"],
     queryFn: villaImportService.listCustomers,
-    enabled: isOwnersMode,
+    enabled: isOwnersMode && !isOwnerAccount,
+  });
+
+  const { data: myVillas = [], isLoading: isLoadingMyVillas } = useQuery({
+    queryKey: ["myVillaImportVillas"],
+    queryFn: villaImportService.listMyVillas,
+    enabled: isOwnersMode && isOwnerAccount,
   });
 
   const { data: sales = [], isLoading: isLoadingSales } = useQuery({
@@ -95,19 +93,27 @@ export function VillaImportManagementContent({
     enabled: isOwnersMode && !!selectedCustomerId,
   });
 
+  const resetCreateOwnerForm = () => {
+    setCustomerName("");
+    setCustomerNotes("");
+    setCustomerAccountEmail("");
+    setCustomerAccountPassword("");
+    setCustomerAccountFullName("");
+  };
+
   const createCustomerMutation = useMutation({
     mutationFn: villaImportService.createCustomer,
     onSuccess: (customer) => {
       toast.success("Đã tạo chủ villa");
-      setCustomerName("");
-      setCustomerNotes("");
+      resetCreateOwnerForm();
       setSelectedCustomerId(customer.id);
+      setIsCreateOwnerModalOpen(false);
       void queryClient.invalidateQueries({
         queryKey: ["villaImportCustomers"],
       });
     },
-    onError: () => {
-      toast.error("Tạo chủ villa thất bại");
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Tạo chủ villa thất bại"));
     },
   });
 
@@ -127,29 +133,17 @@ export function VillaImportManagementContent({
     },
   });
 
-  const selectedCustomer = customers.find(
-    (item) => item.id === selectedCustomerId,
-  );
+  const selectedCustomer = customers.find((item) => item.id === selectedCustomerId);
 
   const groupedRates = useMemo(() => {
-    const grouped = new Map<
-      string,
-      {
-        villaId: string;
-        villaName: string;
-        monthValue: string | null;
-        sheetName: string;
-        rates: typeof rates;
-      }
-    >();
+    const grouped = new Map<string, GroupedVillaRate>();
 
     for (const rate of rates) {
-      const villaId = rate.villaId;
-      const current = grouped.get(villaId);
+      const current = grouped.get(rate.villaId);
 
       if (!current) {
-        grouped.set(villaId, {
-          villaId,
+        grouped.set(rate.villaId, {
+          villaId: rate.villaId,
           villaName: rate.villa?.name || "Villa",
           monthValue: rate.monthValue || null,
           sheetName: rate.sourceSheetName,
@@ -184,10 +178,45 @@ export function VillaImportManagementContent({
       return;
     }
 
-    createCustomerMutation.mutate({
-      name: customerName.trim(),
-      notes: customerNotes.trim() || undefined,
-    });
+    const email = customerAccountEmail.trim();
+    const password = customerAccountPassword.trim();
+
+    if ((email && !password) || (!email && password)) {
+      toast.error("Nhập đủ tài khoản và mật khẩu nếu muốn tạo luôn tài khoản");
+      return;
+    }
+
+    if (email && !customerAccountFullName.trim()) {
+      setCustomerAccountFullName(customerName.trim());
+    }
+
+    createCustomerMutation.mutate(
+      {
+        name: customerName.trim(),
+        notes: customerNotes.trim() || undefined,
+      },
+      {
+        onSuccess: async (customer) => {
+          if (email && password) {
+            try {
+              await villaImportService.createCustomerAccount(customer.id, {
+                email,
+                password,
+                fullName: customerAccountFullName.trim() || customerName.trim(),
+              });
+              toast.success("Đã tạo chủ villa và tài khoản đăng nhập");
+            } catch (error) {
+              toast.error(
+                getErrorMessage(
+                  error,
+                  "Đã tạo chủ villa nhưng chưa tạo được tài khoản",
+                ),
+              );
+            }
+          }
+        },
+      },
+    );
   };
 
   const handleCreateSale = () => {
@@ -206,434 +235,164 @@ export function VillaImportManagementContent({
       return;
     }
 
-    createSaleMutation.mutate({
-      fullName: saleFullName.trim(),
-      email: saleEmail.trim(),
-      password: salePassword,
-    });
+    createSaleMutation.mutate(
+      {
+        fullName: saleFullName.trim(),
+        email: saleEmail.trim(),
+        password: salePassword,
+      },
+      {
+        onSuccess: () => {
+          setIsCreateSaleModalOpen(false);
+        },
+      },
+    );
+  };
+
+  const openDetailsModal = (customerId: string, tab: DetailsTab) => {
+    setSelectedCustomerId(customerId);
+    setDetailsTab(tab);
+    setExpandedVillaId(null);
+    setIsDetailsModalOpen(true);
   };
 
   return (
     <div className="space-y-8">
-      {isOwnersMode ? (
-        <section className="grid gap-6 lg:grid-cols-3">
-          {highlights.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <div className="inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-                <item.icon className="h-5 w-5" />
-              </div>
-              <h2 className="mt-5 text-lg font-semibold text-slate-900">
-                {item.title}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {item.description}
-              </p>
-            </div>
-          ))}
-        </section>
-      ) : null}
-
       <section className="grid gap-6">
         <div className="space-y-6 rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
           {isOwnersMode ? (
-            <>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  1. Tạo chủ villa
-                </h2>
-                <p className="mt-2 text-sm leading-7 text-slate-500">
-                  Mỗi chủ villa sẽ có một danh sách villa riêng.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customerName">Tên chủ villa</Label>
-                  <Input
-                    id="customerName"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Ví dụ: Tracy Trips"
-                  />
+            isOwnerAccount ? (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Danh sách villa
+                  </h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-500">
+                    Đây là các villa đang thuộc quyền quản lý của bạn.
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerNotes">Ghi chú</Label>
-                  <Textarea
-                    id="customerNotes"
-                    value={customerNotes}
-                    onChange={(e) => setCustomerNotes(e.target.value)}
-                    placeholder="Nguồn sheet, nhóm sales, ghi chú thêm..."
-                  />
-                </div>
-                <Button
-                  onClick={handleCreateCustomer}
-                  disabled={createCustomerMutation.isPending}
-                >
-                  {createCustomerMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Users className="mr-2 h-4 w-4" />
-                  )}
-                  Tạo chủ villa
-                </Button>
-              </div>
 
-              <Separator />
-
-              <div>
-                {selectedCustomer ? (
-                  <div className="mb-5 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-5 py-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-emerald-700">
-                          Chủ villa đang chọn
-                        </div>
-                        <div className="mt-1 text-lg font-semibold text-slate-900">
-                          {selectedCustomer.name}
-                        </div>
-                        <div className="mt-1 text-sm text-slate-600">
-                          {customerAccountStatus?.hasAccount
-                            ? `Tài khoản: ${customerAccountStatus.account?.email}`
-                            : "Chưa có tài khoản đăng nhập cho chủ villa này"}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        <Button
-                          type="button"
-                          onClick={() => setIsModalOpen(true)}
-                          className="rounded-2xl"
-                        >
-                          <Sheet className="mr-2 h-4 w-4" />
-                          Mở modal cài đặt
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsAccountModalOpen(true)}
-                          className="rounded-2xl"
-                        >
-                          <KeyRound className="mr-2 h-4 w-4" />
-                          {customerAccountStatus?.hasAccount
-                            ? "Reset mật khẩu"
-                            : "Thiết lập tài khoản"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                <h3 className="text-base font-semibold text-slate-900">
-                  Chủ villa hiện có
-                </h3>
-                <div className="mt-4 space-y-3">
-                  {isLoadingCustomers ? (
-                    <div className="text-sm text-slate-500">
-                      Đang tải chủ villa...
-                    </div>
-                  ) : customers.length === 0 ? (
-                    <div className="text-sm text-slate-500">
-                      Chưa có chủ villa nào.
-                    </div>
-                  ) : (
-                    customers.map((customer) => (
-                      <button
-                        key={customer.id}
-                        onClick={() => setSelectedCustomerId(customer.id)}
-                        className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
-                          selectedCustomerId === customer.id
-                            ? "border-emerald-300 bg-emerald-50"
-                            : "border-slate-200 bg-white hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="font-semibold text-slate-900">
-                          {customer.name}
-                        </div>
-                        <div className="mt-2">
-                          <Badge
-                            variant="secondary"
-                            className={
-                              customer.accountUser
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-slate-100 text-slate-600"
-                            }
-                          >
-                            {customer.accountUser
-                              ? customer.accountUser.email
-                              : "Chưa có tài khoản"}
-                          </Badge>
-                        </div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          {customer.notes || "Không có ghi chú"}
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <CalendarRange className="h-4 w-4 text-emerald-600" />
-                  <h3 className="text-base font-semibold text-slate-900">
-                    Villa đã lưu cho chủ villa
-                  </h3>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {!selectedCustomerId ? (
-                    <div className="text-sm text-slate-500">
-                      Chọn chủ villa để xem danh sách villa.
-                    </div>
-                  ) : isLoadingVillas ? (
+                <div className="space-y-3">
+                  {isLoadingMyVillas ? (
                     <div className="text-sm text-slate-500">
                       Đang tải danh sách villa...
                     </div>
-                  ) : villas.length === 0 ? (
-                    <div className="text-sm text-slate-500">
-                      Chủ villa này chưa có villa nào.
+                  ) : myVillas.length === 0 ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                      Bạn chưa có villa nào được import.
                     </div>
                   ) : (
-                    villas.map((villa) => (
+                    myVillas.map((villa) => (
                       <div
                         key={villa.id}
-                        className="rounded-2xl border border-slate-200 bg-white p-4"
+                        className="rounded-2xl border border-slate-200 bg-white p-5"
                       >
                         <div className="font-semibold text-slate-900">
                           {villa.name}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          Ô nguồn: {villa.sourceCellRef || "N/A"} • Sheet:{" "}
-                          {villa.sourceSheetName || "N/A"}
+                        <div className="mt-2 text-sm text-slate-600">
+                          Sheet: {villa.sourceSheetName || "N/A"} • Ô nguồn:{" "}
+                          {villa.sourceCellRef || "N/A"}
                         </div>
+                        <div className="mt-1 text-sm text-slate-600">
+                          Giá gần nhất:{" "}
+                          {villa.latestRate?.price
+                            ? villa.latestRate.price.toLocaleString("vi-VN")
+                            : "Chưa có giá"}
+                        </div>
+                        {villa.latestRate?.stayDate ? (
+                          <div className="mt-1 text-xs text-slate-500">
+                            Ngày áp dụng gần nhất: {villa.latestRate.stayDate}
+                          </div>
+                        ) : null}
                       </div>
                     ))
                   )}
                 </div>
               </div>
-
-              <Separator />
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <CalendarRange className="h-4 w-4 text-emerald-600" />
-                  <h3 className="text-base font-semibold text-slate-900">
-                    Dữ liệu giá đã lưu
-                  </h3>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {!selectedCustomerId ? (
-                    <div className="text-sm text-slate-500">
-                      Chọn chủ villa để xem dữ liệu giá theo ngày.
-                    </div>
-                  ) : isLoadingRates ? (
-                    <div className="text-sm text-slate-500">
-                      Đang tải dữ liệu giá...
-                    </div>
-                  ) : rates.length === 0 ? (
-                    <div className="text-sm text-slate-500">
-                      Chủ villa này chưa có dữ liệu giá nào.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                        Đã lưu {rates.length} dòng giá cho{" "}
-                        {groupedRates.length} villa.
-                      </div>
-                      {groupedRates.map((group) => {
-                        const isExpanded = expandedVillaId === group.villaId;
-                        const latestRate = group.rates[0];
-
-                        return (
-                          <div
-                            key={group.villaId}
-                            className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExpandedVillaId((current) =>
-                                  current === group.villaId
-                                    ? null
-                                    : group.villaId,
-                                )
-                              }
-                              className="flex w-full items-start justify-between gap-4 p-5 text-left"
-                            >
-                              <div>
-                                <div className="font-semibold text-slate-900">
-                                  {group.villaName}
-                                </div>
-                                <div className="mt-2 text-sm text-slate-600">
-                                  {group.monthValue
-                                    ? `Tháng ${group.monthValue}`
-                                    : "Chưa rõ tháng"}{" "}
-                                  • {group.rates.length} ngày có dữ liệu
-                                </div>
-                                <div className="mt-1 text-xs text-slate-500">
-                                  Sheet: {group.sheetName} • Giá gần nhất:{" "}
-                                  {latestRate?.price
-                                    ? latestRate.price.toLocaleString("vi-VN")
-                                    : "Không có giá"}
-                                </div>
-                              </div>
-                              <ChevronDown
-                                className={`mt-1 h-5 w-5 shrink-0 text-slate-400 transition-transform ${
-                                  isExpanded ? "rotate-180" : ""
-                                }`}
-                              />
-                            </button>
-
-                            {isExpanded ? (
-                              <div className="border-t border-slate-100 bg-slate-50/70 p-5">
-                                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                  {group.rates.map((rate) => (
-                                    <div
-                                      key={rate.id}
-                                      className="rounded-2xl border border-white bg-white p-4 shadow-sm"
-                                    >
-                                      <div className="font-semibold text-slate-900">
-                                        {rate.stayDate ||
-                                          `${rate.monthValue || "N/A"} / ${rate.dayLabel}`}
-                                      </div>
-                                      <div className="mt-2 text-sm text-slate-600">
-                                        Giá:{" "}
-                                        {rate.price
-                                          ? rate.price.toLocaleString("vi-VN")
-                                          : "Không có giá"}
-                                      </div>
-                                      <div className="mt-1 text-sm text-slate-600">
-                                        Raw: {rate.rawValue}
-                                      </div>
-                                      {rate.note ? (
-                                        <div className="mt-1 text-xs text-slate-500">
-                                          Ghi chú: {rate.note}
-                                        </div>
-                                      ) : null}
-                                      <div className="mt-2 text-xs text-slate-500">
-                                        Ô nguồn: {rate.sourceCellRef}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
-                </div>
-              </div>
-            </>
+            ) : (
+              <VillaImportOwnersSection
+                customers={customers}
+                isLoadingCustomers={isLoadingCustomers}
+                selectedCustomerId={selectedCustomerId}
+                onOpenCreateOwnerModal={() => setIsCreateOwnerModalOpen(true)}
+                onSelectCustomer={setSelectedCustomerId}
+                onOpenSheetConfig={(customerId) => {
+                  setSelectedCustomerId(customerId);
+                  setIsSheetConfigModalOpen(true);
+                }}
+                onOpenAccount={(customerId) => {
+                  setSelectedCustomerId(customerId);
+                  setIsAccountModalOpen(true);
+                }}
+                onOpenDetails={openDetailsModal}
+              />
+            )
           ) : null}
 
           {isSalesMode ? (
-            <>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  Quản lý sales
-                </h2>
-                <p className="mt-2 text-sm leading-7 text-slate-500">
-                  Sale được tạo ở đây sẽ dùng role{" "}
-                  <span className="font-semibold">TRUONG_PHONG</span>.
-                </p>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="saleFullName">Tên sale</Label>
-                  <Input
-                    id="saleFullName"
-                    value={saleFullName}
-                    onChange={(e) => setSaleFullName(e.target.value)}
-                    placeholder="Ví dụ: Nguyễn Văn A"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="saleEmail">Email đăng nhập</Label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      id="saleEmail"
-                      value={saleEmail}
-                      onChange={(e) => setSaleEmail(e.target.value)}
-                      placeholder="sale@villabooking.vn"
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="salePassword">Mật khẩu</Label>
-                  <Input
-                    id="salePassword"
-                    type="password"
-                    value={salePassword}
-                    onChange={(e) => setSalePassword(e.target.value)}
-                    placeholder="Nhập mật khẩu ban đầu"
-                  />
-                </div>
-              </div>
-
-              <Button
-                onClick={handleCreateSale}
-                disabled={createSaleMutation.isPending}
-              >
-                {createSaleMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                )}
-                Tạo sale
-              </Button>
-
-              <Separator />
-
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">
-                  Sale hiện có
-                </h3>
-                <div className="mt-4 space-y-3">
-                  {isLoadingSales ? (
-                    <div className="text-sm text-slate-500">
-                      Đang tải sale...
-                    </div>
-                  ) : sales.length === 0 ? (
-                    <div className="text-sm text-slate-500">
-                      Chưa có sale nào.
-                    </div>
-                  ) : (
-                    sales.map((sale) => (
-                      <div
-                        key={sale.id}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                      >
-                        <div>
-                          <div className="font-semibold text-slate-900">
-                            {sale.fullName}
-                          </div>
-                          <div className="mt-1 text-sm text-slate-600">
-                            {sale.email}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </>
+            <VillaImportSalesSection
+              sales={sales}
+              isLoadingSales={isLoadingSales}
+              onOpenCreateSaleModal={() => setIsCreateSaleModalOpen(true)}
+            />
           ) : null}
         </div>
       </section>
 
-      {isOwnersMode ? (
+      {isOwnersMode && !isOwnerAccount ? (
         <>
+          <VillaImportCreateOwnerModal
+            isOpen={isCreateOwnerModalOpen}
+            customerName={customerName}
+            customerNotes={customerNotes}
+            customerAccountEmail={customerAccountEmail}
+            customerAccountPassword={customerAccountPassword}
+            customerAccountFullName={customerAccountFullName}
+            isSubmitting={createCustomerMutation.isPending}
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsCreateOwnerModalOpen(false);
+                resetCreateOwnerForm();
+                return;
+              }
+              setIsCreateOwnerModalOpen(true);
+            }}
+            onCustomerNameChange={setCustomerName}
+            onCustomerNotesChange={setCustomerNotes}
+            onCustomerAccountEmailChange={setCustomerAccountEmail}
+            onCustomerAccountPasswordChange={setCustomerAccountPassword}
+            onCustomerAccountFullNameChange={setCustomerAccountFullName}
+            onSubmit={handleCreateCustomer}
+            onClose={() => {
+              setIsCreateOwnerModalOpen(false);
+              resetCreateOwnerForm();
+            }}
+          />
+
+          <VillaImportOwnerDetailsModal
+            isOpen={isDetailsModalOpen}
+            selectedCustomerName={selectedCustomer?.name}
+            selectedCustomerId={selectedCustomerId}
+            detailsTab={detailsTab}
+            isLoadingVillas={isLoadingVillas}
+            villas={villas}
+            isLoadingRates={isLoadingRates}
+            rates={rates}
+            groupedRates={groupedRates}
+            expandedVillaId={expandedVillaId}
+            onOpenChange={setIsDetailsModalOpen}
+            onTabChange={setDetailsTab}
+            onExpandedVillaChange={(villaId) =>
+              setExpandedVillaId((current) =>
+                current === villaId ? null : villaId,
+              )
+            }
+          />
+
           <VillaSheetImportModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            isOpen={isSheetConfigModalOpen}
+            onClose={() => setIsSheetConfigModalOpen(false)}
             customerId={selectedCustomerId || undefined}
             customerName={selectedCustomer?.name}
             onImported={() => {
@@ -653,6 +412,22 @@ export function VillaImportManagementContent({
             accountStatus={customerAccountStatus}
           />
         </>
+      ) : null}
+
+      {isSalesMode ? (
+        <VillaImportCreateSaleModal
+          isOpen={isCreateSaleModalOpen}
+          saleFullName={saleFullName}
+          saleEmail={saleEmail}
+          salePassword={salePassword}
+          isSubmitting={createSaleMutation.isPending}
+          onOpenChange={setIsCreateSaleModalOpen}
+          onSaleFullNameChange={setSaleFullName}
+          onSaleEmailChange={setSaleEmail}
+          onSalePasswordChange={setSalePassword}
+          onSubmit={handleCreateSale}
+          onClose={() => setIsCreateSaleModalOpen(false)}
+        />
       ) : null}
     </div>
   );
