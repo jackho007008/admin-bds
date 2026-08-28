@@ -148,7 +148,7 @@ export function VillaPriceCalendarModal({
                         </span>
                       </div>
                       
-                      {rate && (
+                      {rate && rate.price != null && (
                         <div className={cn(
                           "mt-1 p-1.5 rounded-lg border text-xs font-medium flex flex-col gap-1",
                           hasError 
