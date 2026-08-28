@@ -82,7 +82,9 @@ export function VillaImportCreateOwnerModal({
         if (usefulColors.length > 0) {
           const uniqueColors = Array.from(new Set(usefulColors));
           setSuggestedColors(uniqueColors);
-          toast.success(`Đã tìm thấy ${uniqueColors.length} màu trong file! Vui lòng chọn bên dưới.`);
+          toast.success(
+            `Đã tìm thấy ${uniqueColors.length} màu trong file! Vui lòng chọn bên dưới.`,
+          );
         } else {
           setSuggestedColors([]);
           toast.info("File không có ô nào tô màu (ngoài trắng/đen)");
@@ -136,17 +138,17 @@ export function VillaImportCreateOwnerModal({
         <AppModalHeader>
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
             <Users className="h-4 w-4" />
-            {isEditing ? "Cập nhật chủ nhà" : "Tạo mới chủ nhà"}
+            {isEditing ? "Cập nhật sheet" : "Tạo mới sheet"}
           </div>
           <AppModalTitle className="pt-3">
-            {isEditing ? "Cập nhật chủ nhà" : "Tạo chủ nhà"}
+            {isEditing ? "Cập nhật sheet" : "Tạo sheet"}
           </AppModalTitle>
         </AppModalHeader>
 
         <AppModalBody className="space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Tên chủ nhà / Tên nhóm</Label>
+              <Label htmlFor="customerName">Tên sheet</Label>
               <Input
                 id="customerName"
                 value={customerName}
@@ -328,9 +330,14 @@ export function VillaImportCreateOwnerModal({
                               type="button"
                               onClick={() => {
                                 if (!bookedCellColors.includes(color)) {
-                                  onBookedCellColorsChange([...bookedCellColors, color]);
+                                  onBookedCellColorsChange([
+                                    ...bookedCellColors,
+                                    color,
+                                  ]);
                                 }
-                                setSuggestedColors(suggestedColors.filter((c) => c !== color));
+                                setSuggestedColors(
+                                  suggestedColors.filter((c) => c !== color),
+                                );
                               }}
                               className="group relative h-8 w-8 rounded-md border border-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-blue-500"
                               style={{ backgroundColor: color }}
@@ -380,7 +387,7 @@ export function VillaImportCreateOwnerModal({
             ) : (
               <Users className="mr-2 h-4 w-4" />
             )}
-            {isEditing ? "Lưu thay đổi" : "Tạo chủ nhà"}
+            {isEditing ? "Lưu thay đổi" : "Tạo Sheet"}
           </Button>
         </AppModalFooter>
       </AppModalContent>
