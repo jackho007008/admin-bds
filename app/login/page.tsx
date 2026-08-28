@@ -11,28 +11,37 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const loginMutation = useMutation({
-    mutationFn: ({ email, pass }: { email: string; pass: string }) => 
+    mutationFn: ({ email, pass }: { email: string; pass: string }) =>
       authService.login(email, pass),
     onSuccess: (data) => {
       const { user, access_token } = data;
 
+      if (user.role !== "ADMIN") {
+        setAuth(user, access_token);
+        toast.error("Chỉ tài khoản admin mới được đăng nhập hệ quản trị.");
+        void authService
+          .logout()
+          .catch(() => undefined)
+          .finally(clearAuth);
+        return;
+      }
+
       setAuth(user, access_token);
-      
+
       toast.success("Đăng nhập thành công!");
-      router.replace(
-        user.role === "ADMIN" || user.role === "DAU_CHU"
-          ? "/admin/villa-owners"
-          : "/",
-      );
+      router.replace("/admin");
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message;
-      const errorMsg = Array.isArray(message) ? message[0] : (message || "Đăng nhập thất bại. Vui lòng kiểm tra lại kết nối.");
+      const errorMsg = Array.isArray(message)
+        ? message[0]
+        : message || "Đăng nhập thất bại. Vui lòng kiểm tra lại kết nối.";
       toast.error(errorMsg);
-    }
+    },
   });
 
   const handleLogin = async (email: string, pass: string) => {
@@ -44,11 +53,7 @@ export default function LoginPage() {
     loginMutation.mutate({ email, pass });
   };
 
-
   return (
-    <LoginTemplate 
-      onLogin={handleLogin} 
-      isLoading={loginMutation.isPending} 
-    />
+    <LoginTemplate onLogin={handleLogin} isLoading={loginMutation.isPending} />
   );
 }

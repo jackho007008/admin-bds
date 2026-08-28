@@ -8,7 +8,7 @@ import {
   AppModalHeader,
   AppModalTitle,
 } from "@/components/ui/app-modal";
-import { Banknote, CalendarRange, ChevronDown, House } from "lucide-react";
+import { Banknote, CalendarRange, ChevronDown, House, Plus } from "lucide-react";
 import type { OwnerDetailsModalProps } from "@/components/admin/villa-import-management.types";
 
 export function VillaImportOwnerDetailsModal({
@@ -25,16 +25,17 @@ export function VillaImportOwnerDetailsModal({
   onOpenChange,
   onTabChange,
   onExpandedVillaChange,
+  onOpenCreateVilla,
 }: OwnerDetailsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <AppModalContent className="max-h-[90vh] max-w-4xl rounded-[1.75rem]">
         <AppModalHeader className="px-6 py-5 sm:px-8">
           <AppModalTitle className="text-xl">
-            {selectedCustomerName || "Chi tiết chủ villa"}
+            {selectedCustomerName || "Chi tiết sheet"}
           </AppModalTitle>
           <AppModalDescription className="text-sm">
-            Xem danh sách villa và dữ liệu giá đã lưu cho chủ villa này.
+            Xem danh sách villa và dữ liệu giá đã lưu cho sheet này.
           </AppModalDescription>
         </AppModalHeader>
 
@@ -65,13 +66,19 @@ export function VillaImportOwnerDetailsModal({
               <div className="flex items-center gap-2">
                 <CalendarRange className="h-4 w-4 text-emerald-600" />
                 <h3 className="text-base font-semibold text-slate-900">
-                  Villa đã lưu cho chủ villa
+                  Villa đã lưu cho sheet
                 </h3>
+              </div>
+              <div className="mt-4">
+                <Button type="button" className="rounded-xl" onClick={onOpenCreateVilla}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tạo villa
+                </Button>
               </div>
               <div className="mt-4 space-y-3">
                 {!selectedCustomerId ? (
                   <div className="text-sm text-slate-500">
-                    Chọn chủ villa để xem danh sách villa.
+                    Chọn sheet để xem danh sách villa.
                   </div>
                 ) : isLoadingVillas ? (
                   <div className="text-sm text-slate-500">
@@ -79,7 +86,7 @@ export function VillaImportOwnerDetailsModal({
                   </div>
                 ) : villas.length === 0 ? (
                   <div className="text-sm text-slate-500">
-                    Chủ villa này chưa có villa nào.
+                    Sheet này chưa có villa nào.
                   </div>
                 ) : (
                   villas.map((villa) => (
@@ -108,13 +115,13 @@ export function VillaImportOwnerDetailsModal({
               <div className="mt-4 space-y-3">
                 {!selectedCustomerId ? (
                   <div className="text-sm text-slate-500">
-                    Chọn chủ villa để xem dữ liệu giá theo ngày.
+                    Chọn sheet để xem dữ liệu giá theo ngày.
                   </div>
                 ) : isLoadingRates ? (
                   <div className="text-sm text-slate-500">Đang tải dữ liệu giá...</div>
                 ) : rates.length === 0 ? (
                   <div className="text-sm text-slate-500">
-                    Chủ villa này chưa có dữ liệu giá nào.
+                    Sheet này chưa có dữ liệu giá nào.
                   </div>
                 ) : (
                   <>

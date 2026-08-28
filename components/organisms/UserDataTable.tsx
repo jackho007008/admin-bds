@@ -41,21 +41,23 @@ interface UserDataTableProps {
 }
 
 const ROLE_LABELS: Record<Role, string> = {
-  DAU_CHU: "Đầu chủ",
-  DAU_KHACH: "Đầu khách",
-  TRUONG_PHONG: "Trưởng phòng",
-  GIAM_DOC_KD: "GĐ kinh doanh",
-  GD_KHOI: "GĐ khối",
+  DAU_CHU: "Sales",
+  DAU_KHACH: "Sales",
+  TRUONG_PHONG: "Sales",
+  GIAM_DOC_KD: "Sales",
+  GD_KHOI: "Sales",
   ADMIN: "Quản trị viên",
+  Sales: "Sales",
 };
 
 const ROLE_COLORS: Record<Role, string> = {
-  DAU_CHU: "bg-blue-100 text-blue-700 border-blue-200",
-  DAU_KHACH: "bg-slate-100 text-slate-700 border-slate-200",
-  TRUONG_PHONG: "bg-purple-100 text-purple-700 border-purple-200",
-  GIAM_DOC_KD: "bg-orange-100 text-orange-700 border-orange-200",
-  GD_KHOI: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  DAU_CHU: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  DAU_KHACH: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  TRUONG_PHONG: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  GIAM_DOC_KD: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  GD_KHOI: "bg-emerald-100 text-emerald-700 border-emerald-200",
   ADMIN: "bg-red-100 text-red-700 border-red-200",
+  Sales: "bg-emerald-100 text-emerald-700 border-emerald-200",
 };
 
 export function UserDataTable({ users, onEdit, onBlock, onRevokeSessions }: UserDataTableProps) {

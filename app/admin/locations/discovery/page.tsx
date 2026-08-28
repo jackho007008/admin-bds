@@ -34,8 +34,9 @@ export default function DiscoveryPage() {
     try {
       const data = await locationService.getProvinces();
       setProvinces(data);
-      if (data.length > 0 && !selectedProvinceCode) {
-        setSelectedProvinceCode(data[0].code);
+      const firstProvinceCode = data[0]?.code;
+      if (firstProvinceCode && !selectedProvinceCode) {
+        setSelectedProvinceCode(firstProvinceCode);
       }
     } catch {
       toast.error("Không thể tải danh sách tỉnh thành.");
@@ -161,8 +162,12 @@ export default function DiscoveryPage() {
               ) : (
                 provinces.map((province) => (
                   <button
-                    key={province.code}
-                    onClick={() => setSelectedProvinceCode(province.code)}
+                    key={province.id}
+                    onClick={() => {
+                      if (province.code) {
+                        setSelectedProvinceCode(province.code);
+                      }
+                    }}
                     className={cn(
                       "w-full text-left p-3.5 px-5 rounded-xl text-sm font-bold transition-all",
                       selectedProvinceCode === province.code 

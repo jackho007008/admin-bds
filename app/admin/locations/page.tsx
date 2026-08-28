@@ -35,11 +35,20 @@ const initialPendingState: PendingState = {
 
 export default function LocationsPage() {
   const [provinces, setProvinces] = useState<LocationItem[]>([]);
-  const [districtsCache, setDistrictsCache] = useState<Record<number, LocationItem[]>>({});
-  const [wardsCache, setWardsCache] = useState<Record<number, LocationItem[]>>({});
-  const [expandedProvinces, setExpandedProvinces] = useState<Set<number>>(new Set());
-  const [expandedDistricts, setExpandedDistricts] = useState<Set<number>>(new Set());
-  const [pendingChanges, setPendingChanges] = useState<PendingState>(initialPendingState);
+  const [districtsCache, setDistrictsCache] = useState<
+    Record<number, LocationItem[]>
+  >({});
+  const [wardsCache, setWardsCache] = useState<Record<number, LocationItem[]>>(
+    {},
+  );
+  const [expandedProvinces, setExpandedProvinces] = useState<Set<number>>(
+    new Set(),
+  );
+  const [expandedDistricts, setExpandedDistricts] = useState<Set<number>>(
+    new Set(),
+  );
+  const [pendingChanges, setPendingChanges] =
+    useState<PendingState>(initialPendingState);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -65,25 +74,31 @@ export default function LocationsPage() {
     return () => window.clearTimeout(timer);
   }, [fetchProvinces]);
 
-  const fetchDistricts = useCallback(async (provinceId: number, force = false) => {
-    if (!force && districtsCache[provinceId]) return;
-    try {
-      const data = await locationService.getDistrictsByProvince(provinceId);
-      setDistrictsCache((prev) => ({ ...prev, [provinceId]: data }));
-    } catch {
-      toast.error("Không thể tải danh sách quận huyện.");
-    }
-  }, [districtsCache]);
+  const fetchDistricts = useCallback(
+    async (provinceId: number, force = false) => {
+      if (!force && districtsCache[provinceId]) return;
+      try {
+        const data = await locationService.getDistrictsByProvince(provinceId);
+        setDistrictsCache((prev) => ({ ...prev, [provinceId]: data }));
+      } catch {
+        toast.error("Không thể tải danh sách quận huyện.");
+      }
+    },
+    [districtsCache],
+  );
 
-  const fetchWards = useCallback(async (districtId: number, force = false) => {
-    if (!force && wardsCache[districtId]) return;
-    try {
-      const data = await locationService.getWardsByDistrict(districtId);
-      setWardsCache((prev) => ({ ...prev, [districtId]: data }));
-    } catch {
-      toast.error("Không thể tải danh sách phường xã.");
-    }
-  }, [wardsCache]);
+  const fetchWards = useCallback(
+    async (districtId: number, force = false) => {
+      if (!force && wardsCache[districtId]) return;
+      try {
+        const data = await locationService.getWardsByDistrict(districtId);
+        setWardsCache((prev) => ({ ...prev, [districtId]: data }));
+      } catch {
+        toast.error("Không thể tải danh sách phường xã.");
+      }
+    },
+    [wardsCache],
+  );
 
   const toggleProvinceExpansion = (provinceId: number) => {
     setExpandedProvinces((prev) => {
@@ -178,14 +193,18 @@ export default function LocationsPage() {
     setIsSaving(true);
     try {
       await locationService.updateLocationsBulk({
-        provinces: Object.entries(pendingChanges.provinces).map(([id, value]) => ({
-          id: Number(id),
-          ...value,
-        })),
-        districts: Object.entries(pendingChanges.districts).map(([id, value]) => ({
-          id: Number(id),
-          ...value,
-        })),
+        provinces: Object.entries(pendingChanges.provinces).map(
+          ([id, value]) => ({
+            id: Number(id),
+            ...value,
+          }),
+        ),
+        districts: Object.entries(pendingChanges.districts).map(
+          ([id, value]) => ({
+            id: Number(id),
+            ...value,
+          }),
+        ),
         wards: Object.entries(pendingChanges.wards).map(([id, value]) => ({
           id: Number(id),
           ...value,
@@ -231,9 +250,6 @@ export default function LocationsPage() {
               Quản lý địa chỉ
             </h2>
           </div>
-          <p className="ml-1 text-sm font-medium text-slate-500">
-            Quản lý địa chỉ 3 cấp cũ: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -329,7 +345,9 @@ export default function LocationsPage() {
                           <span
                             className={cn(
                               "text-[16px] font-bold transition-colors",
-                              provinceActive ? "text-slate-900" : "text-slate-400",
+                              provinceActive
+                                ? "text-slate-900"
+                                : "text-slate-400",
                             )}
                           >
                             {province.name}
@@ -451,7 +469,8 @@ export default function LocationsPage() {
                                       <div className="col-span-full flex justify-center py-4">
                                         <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
                                       </div>
-                                    ) : wardsCache[district.id]?.length === 0 ? (
+                                    ) : wardsCache[district.id]?.length ===
+                                      0 ? (
                                       <div className="col-span-full py-2 text-center text-sm italic text-slate-400">
                                         Không có dữ liệu phường xã.
                                       </div>
@@ -489,7 +508,10 @@ export default function LocationsPage() {
                                             <button
                                               type="button"
                                               onClick={() =>
-                                                handleWardToggle(ward.id, wardActive)
+                                                handleWardToggle(
+                                                  ward.id,
+                                                  wardActive,
+                                                )
                                               }
                                               className={cn(
                                                 "rounded-full p-1.5 transition-all",

@@ -7,6 +7,15 @@ export interface LocationItem {
   isActive: boolean;
 }
 
+export interface LocationTreeItem {
+  id: number;
+  code?: string;
+  name: string;
+  isActive?: boolean;
+  districts?: LocationTreeItem[];
+  wards?: LocationTreeItem[];
+}
+
 export interface LocationUpdate {
   id: number;
   isActive: boolean;
@@ -25,6 +34,11 @@ export const locationService = {
     return response.data.data;
   },
 
+  getLocationsTree: async (): Promise<LocationTreeItem[]> => {
+    const response = await axiosInstance.get<LocationTreeItem[]>("/locations/tree");
+    return response.data;
+  },
+
   getDistrictsByProvince: async (provinceId: number): Promise<LocationItem[]> => {
     const response = await axiosInstance.get<{ data: LocationItem[] }>(
       `/locations/admin/provinces/${provinceId}/districts`,
@@ -35,6 +49,17 @@ export const locationService = {
   getWardsByDistrict: async (districtId: number): Promise<LocationItem[]> => {
     const response = await axiosInstance.get<{ data: LocationItem[] }>(
       `/locations/admin/districts/${districtId}/wards`,
+    );
+    return response.data.data;
+  },
+
+  getWardsByProvince: async (provinceCode?: string): Promise<LocationItem[]> => {
+    if (!provinceCode) {
+      return [];
+    }
+
+    const response = await axiosInstance.get<{ data: LocationItem[] }>(
+      `/api/v2/locations/admin/provinces/${provinceCode}/wards`,
     );
     return response.data.data;
   },

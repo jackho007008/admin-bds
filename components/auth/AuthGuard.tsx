@@ -4,17 +4,12 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 
-const ADMIN_ROLES = new Set(["ADMIN", "DAU_CHU"]);
-const DAU_CHU_ALLOWED_PATHS = new Set([
-  "/admin",
-  "/admin/villa-owners",
-  "/admin/posts",
-]);
+const ADMIN_ROLE = "ADMIN";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, clearAuth } = useAuthStore();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -33,15 +28,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!ADMIN_ROLES.has(user.role)) {
-      router.replace("/");
-      return;
+    if (user.role !== ADMIN_ROLE) {
+      clearAuth();
+      router.replace("/login");
     }
-
-    if (user.role === "DAU_CHU" && !DAU_CHU_ALLOWED_PATHS.has(pathname)) {
-      router.replace("/admin/villa-owners");
-    }
-  }, [hydrated, isAuthenticated, pathname, router, user]);
+  }, [clearAuth, hydrated, isAuthenticated, pathname, router, user]);
 
   if (!hydrated) {
     return (
@@ -54,11 +45,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated || !user || !ADMIN_ROLES.has(user.role)) {
-    return null;
-  }
-
-  if (user.role === "DAU_CHU" && !DAU_CHU_ALLOWED_PATHS.has(pathname)) {
+  if (!isAuthenticated || !user || user.role !== ADMIN_ROLE) {
     return null;
   }
 

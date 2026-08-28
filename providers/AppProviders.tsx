@@ -6,15 +6,22 @@ import { useState } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 
-export default function AppProviders({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        retry: 1,
-      },
-    },
-  }));
+export default function AppProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 0,
+            retry: 1,
+          },
+        },
+      }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -24,4 +31,3 @@ export default function AppProviders({ children }: { children: React.ReactNode }
     </QueryClientProvider>
   );
 }
-

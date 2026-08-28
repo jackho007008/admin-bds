@@ -25,18 +25,9 @@ export interface Customer {
   id: string;
   name: string;
   notes?: string | null;
-  accountUserId?: string | null;
-  accountUser?: CustomerAccount | null;
+  metadata?: any | null;
   isActive: boolean;
   createdAt: string;
-  updatedAt: string;
-}
-
-export interface CustomerAccount {
-  id: string;
-  email: string;
-  fullName: string;
-  isActive: boolean;
   updatedAt: string;
 }
 
@@ -50,30 +41,29 @@ export interface SaleAccount {
   updatedAt: string;
 }
 
-export interface CustomerAccountStatus {
-  customerId: string;
-  hasAccount: boolean;
-  account: {
-    userId: string;
-    email: string;
-    fullName: string;
-    isActive: boolean;
-    updatedAt: string;
-  } | null;
-}
-
 export interface Villa {
   id: string;
   customerId: string;
   name: string;
   normalizedName: string;
   priceZone?: string | null;
+  description?: string | null;
   floors?: number | null;
   bedrooms?: number | null;
   toilets?: number | null;
   notes?: string | null;
   images?: string[];
+  imageKeys?: string[];
   metadata?: unknown;
+  provinceId?: number | null;
+  districtId?: number | null;
+  wardId?: number | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
+  province?: { id: number; name: string } | null;
+  district?: { id: number; name: string } | null;
+  ward?: { id: number; name: string } | null;
   sourceSpreadsheetId?: string | null;
   sourceSheetName?: string | null;
   sourceSheetGid?: string | null;
@@ -101,7 +91,12 @@ export interface MyVilla extends Villa {
 }
 
 export interface UpdateVillaPayload {
+  priceZone?: string | null;
+  description?: string | null;
   name?: string | null;
+  provinceId?: number | null;
+  districtId?: number | null;
+  wardId?: number | null;
   floors?: number | null;
   bedrooms?: number | null;
   toilets?: number | null;
@@ -231,9 +226,27 @@ export const villaImportService = {
     return response.data;
   },
 
+  updateCustomer: async (
+    id: string,
+    data: {
+      name: string;
+      notes?: string;
+    },
+  ): Promise<Customer> => {
+    const response = await axiosInstance.patch<Customer>(
+      `/villa-import/customers/${id}`,
+      data,
+    );
+    return response.data;
+  },
+
   listCustomers: async (): Promise<Customer[]> => {
     const response = await axiosInstance.get<Customer[]>("/villa-import/customers");
     return response.data;
+  },
+
+  deleteCustomer: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/villa-import/customers/${id}`);
   },
 
   createSale: async (data: {
@@ -260,6 +273,11 @@ export const villaImportService = {
     return response.data;
   },
 
+  getVilla: async (id: string): Promise<Villa> => {
+    const response = await axiosInstance.get<Villa>(`/villa-import/villas/${id}`);
+    return response.data;
+  },
+
   listMyVillas: async (): Promise<MyVilla[]> => {
     const response = await axiosInstance.get<MyVilla[]>("/villa-import/my-villas");
     return response.data;
@@ -273,9 +291,48 @@ export const villaImportService = {
     return response.data;
   },
 
+  updateVillaMultipart: async (
+    id: string,
+    formData: FormData,
+  ): Promise<Villa> => {
+    const response = await axiosInstance.patch<Villa>(
+      `/villa-import/villas/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  },
+
+  createVillaForCustomerMultipart: async (
+    customerId: string,
+    formData: FormData,
+  ): Promise<Villa> => {
+    const response = await axiosInstance.post<Villa>(
+      `/villa-import/customers/${customerId}/villas`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  },
+
   listCustomerRates: async (customerId: string): Promise<VillaDailyRate[]> => {
     const response = await axiosInstance.get<VillaDailyRate[]>(
       `/villa-import/customers/${customerId}/rates`
+    );
+    return response.data;
+  },
+
+  listVillaRates: async (villaId: string): Promise<VillaDailyRate[]> => {
+    const response = await axiosInstance.get<VillaDailyRate[]>(
+      `/villa-import/villas/${villaId}/rates`
     );
     return response.data;
   },
@@ -384,6 +441,24 @@ export const villaImportService = {
     return response.data;
   },
 
+  fetchGoogleSheetColors: async (data: {
+    spreadsheetId: string;
+    gid: string;
+    range?: string;
+  }): Promise<{
+    spreadsheetId: string;
+    gid: string;
+    sheetName: string;
+    range: string;
+    colors: Array<{ hex: string; count: number; kinds: string[] }>;
+  }> => {
+    const response = await axiosInstance.post(
+      "/villa-import/google-sheet/colors",
+      data,
+    );
+    return response.data;
+  },
+
   importVillaNames: async (data: {
     customerId: string;
     spreadsheetId: string;
@@ -427,38 +502,12 @@ export const villaImportService = {
     return response.data;
   },
 
-  getCustomerAccount: async (
-    customerId: string
-  ): Promise<CustomerAccountStatus> => {
-    const response = await axiosInstance.get<CustomerAccountStatus>(
-      `/villa-import/customers/${customerId}/account`
-    );
-    return response.data;
-  },
-
-  createCustomerAccount: async (
-    customerId: string,
-    data: {
-      email: string;
-      password: string;
-      fullName?: string;
-    }
-  ): Promise<CustomerAccountStatus> => {
-    const response = await axiosInstance.post<CustomerAccountStatus>(
-      `/villa-import/customers/${customerId}/account`,
-      data
-    );
-    return response.data;
-  },
-
-  resetCustomerAccountPassword: async (
-    customerId: string,
-    data: {
-      password: string;
-    }
-  ): Promise<CustomerAccountStatus> => {
-    const response = await axiosInstance.post<CustomerAccountStatus>(
-      `/villa-import/customers/${customerId}/account/reset-password`,
+  importAllConfiguredMonths: async (data: {
+    customerId: string;
+    villaId?: string;
+  }): Promise<{ status: string; message: string }> => {
+    const response = await axiosInstance.post(
+      "/villa-import/google-sheet/import-all-configured-months",
       data
     );
     return response.data;

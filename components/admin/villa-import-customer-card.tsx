@@ -1,27 +1,23 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Banknote, House, KeyRound, Sheet } from "lucide-react";
 import type { Customer } from "@/services/villaImportService";
-import type { DetailsTab } from "@/components/admin/villa-import-management.types";
+
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface VillaImportCustomerCardProps {
   customer: Customer;
   isSelected: boolean;
   onSelect: (customerId: string) => void;
-  onOpenSheetConfig: (customerId: string) => void;
-  onOpenAccount: (customerId: string) => void;
-  onOpenDetails: (customerId: string, tab: DetailsTab) => void;
+  onDelete?: (customerId: string) => void;
 }
 
 export function VillaImportCustomerCard({
   customer,
   isSelected,
   onSelect,
-  onOpenSheetConfig,
-  onOpenAccount,
-  onOpenDetails,
+  onDelete,
 }: VillaImportCustomerCardProps) {
   return (
     <div
@@ -40,75 +36,34 @@ export function VillaImportCustomerCard({
           : "border-slate-200 bg-white hover:bg-slate-50"
       }`}
     >
-      <div className="font-semibold text-slate-900">{customer.name}</div>
+      <div className="flex items-start justify-between">
+        <div className="font-semibold text-slate-900">{customer.name}</div>
+        {onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 -mr-2 -mt-2 text-slate-400 hover:text-red-600 hover:bg-red-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Bạn có chắc chắn muốn xoá sheet "${customer.name}"?`)) {
+                onDelete(customer.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       <div className="mt-2">
-        <Badge
-          variant="secondary"
-          className={
-            customer.accountUser
-              ? "bg-emerald-100 text-emerald-800"
-              : "bg-slate-100 text-slate-600"
-          }
-        >
-          {customer.accountUser ? customer.accountUser.email : "Chưa có tài khoản"}
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+          Sheet
         </Badge>
       </div>
       <div className="mt-1 text-xs text-slate-500">
         {customer.notes || "Không có ghi chú"}
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          className="rounded-xl"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenSheetConfig(customer.id);
-          }}
-          aria-label="Mở modal cài đặt"
-        >
-          <Sheet className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-xl px-3 sm:px-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenAccount(customer.id);
-          }}
-          aria-label={customer.accountUser ? "Reset mật khẩu" : "Thiết lập tài khoản"}
-        >
-          <KeyRound className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">
-            {customer.accountUser ? "Reset mật khẩu" : "Thiết lập tài khoản"}
-          </span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-xl px-3 sm:px-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails(customer.id, "villas");
-          }}
-          aria-label="Xem villa"
-        >
-          <House className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Xem villa</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-xl px-3 sm:px-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails(customer.id, "rates");
-          }}
-          aria-label="Xem giá"
-        >
-          <Banknote className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Xem giá</span>
-        </Button>
+      <div className="mt-3 text-xs font-medium text-emerald-700">
+        Bấm để chỉnh cấu hình sheet
       </div>
     </div>
   );

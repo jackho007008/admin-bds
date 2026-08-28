@@ -4,7 +4,8 @@ export type Role =
   | 'TRUONG_PHONG'
   | 'GIAM_DOC_KD'
   | 'GD_KHOI'
-  | 'ADMIN';
+  | 'ADMIN'
+  | 'Sales';
 
 export interface AdminUser {
   id: string;

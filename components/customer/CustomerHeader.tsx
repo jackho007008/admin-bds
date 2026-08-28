@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export function CustomerHeader() {
   const user = useAuthStore((state) => state.user);
-  const canOpenAdmin = user?.role === "ADMIN" || user?.role === "DAU_CHU";
+  const canOpenAdmin = user?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">

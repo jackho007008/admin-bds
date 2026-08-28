@@ -17,7 +17,7 @@ export function AppModalContent({
   return (
     <DialogContent
       className={cn(
-        "overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-0 shadow-2xl",
+        "overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-0 shadow-2xl flex flex-col max-h-[85vh]",
         className,
       )}
       {...props}
@@ -32,7 +32,7 @@ export function AppModalHeader({
   return (
     <DialogHeader
       className={cn(
-        "border-b border-slate-100 bg-slate-50/70 px-8 py-7 text-left",
+        "border-b border-slate-100 bg-slate-50/70 px-8 py-7 text-left shrink-0",
         className,
       )}
       {...props}
@@ -68,7 +68,7 @@ export function AppModalBody({
   className,
   ...props
 }: ComponentProps<"div">) {
-  return <div className={cn("space-y-5 px-8 py-7", className)} {...props} />;
+  return <div className={cn("space-y-5 px-8 py-7 overflow-y-auto flex-1", className)} {...props} />;
 }
 
 export function AppModalFooter({
@@ -78,7 +78,7 @@ export function AppModalFooter({
   return (
     <DialogFooter
       className={cn(
-        "border-t border-slate-100 bg-slate-50/70 px-8 py-6 sm:justify-between",
+        "border-t border-slate-100 bg-slate-50/70 px-8 py-6 sm:justify-between shrink-0",
         className,
       )}
       {...props}

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { ShieldX } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
+import { cn } from "@/lib/utils";
 
 export default function UnauthorizedPage() {
   const user = useAuthStore((state) => state.user);
@@ -24,9 +25,12 @@ export default function UnauthorizedPage() {
             : "Tài khoản của bạn không có quyền truy cập khu quản trị."}
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button asChild className="rounded-2xl">
-            <Link href="/login">Quay lại đăng nhập</Link>
-          </Button>
+          <Link
+            href="/login"
+            className={cn(buttonVariants(), "rounded-2xl")}
+          >
+            Quay lại đăng nhập
+          </Link>
           <Button
             type="button"
             variant="outline"

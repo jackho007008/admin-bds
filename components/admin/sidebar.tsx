@@ -2,28 +2,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import {
-  MapPin,
-  Building2,
-  LogOut,
-  Users,
-  ShieldCheck,
-  X,
-  House,
-  SquarePen,
-} from "lucide-react";
+import { MapPin, Building2, LogOut, Users, ShieldCheck, X, House } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { appTheme } from "@/lib/theme";
 
 const adminMenuItems = [
   { icon: MapPin, label: "Quản lý địa chỉ", href: "/admin/locations" },
-  { icon: Users, label: "Quản lý chủ villa", href: "/admin/villa-owners" },
+  { icon: Users, label: "Quản lý sheet", href: "/admin/villa-owners" },
+  { icon: House, label: "Quản lý villa", href: "/admin/villas" },
   { icon: ShieldCheck, label: "Quản lý sales", href: "/admin/sales" },
-];
-
-const ownerMenuItems = [
-  { icon: House, label: "Danh sách villa", href: "/admin/villa-owners" },
-  { icon: SquarePen, label: "Đăng tin", href: "/admin/posts" },
 ];
 
 interface SidebarProps {
@@ -34,9 +21,7 @@ interface SidebarProps {
 export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
-  const menuItems = user?.role === "DAU_CHU" ? ownerMenuItems : adminMenuItems;
 
   const handleLogout = () => {
     clearAuth();
@@ -94,7 +79,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => (
+          {adminMenuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

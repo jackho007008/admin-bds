@@ -33,7 +33,7 @@ const userSchema = z.object({
   fullName: z.string().min(2, "Họ tên phải có ít nhất 2 ký tự"),
   email: z.string().email("Email không hợp lệ"),
   phone: z.string().min(10, "Số điện thoại không hợp lệ"),
-  role: z.string(),
+  role: z.custom<Role>((value) => typeof value === "string"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự").optional().or(z.literal("")),
   departmentId: z.string().optional().nullable(),
   provinceId: z.number().optional().nullable(),
@@ -50,22 +50,16 @@ interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (id: string, data: Partial<AdminUser>) => Promise<void>;
-  onCreate?: (data: any) => Promise<void>;
+  onCreate?: (data: UserFormValues) => Promise<void>;
   onRevokeSessions?: (id: string) => Promise<void>;
 }
 
 const ROLES: { value: Role; label: string }[] = [
-  { value: "DAU_CHU", label: "Đầu chủ" },
-  { value: "DAU_KHACH", label: "Đầu khách" },
-  { value: "TRUONG_PHONG", label: "Trưởng phòng" },
-  { value: "GIAM_DOC_KD", label: "GĐ kinh doanh" },
-  { value: "GD_KHOI", label: "GĐ khối" },
-  { value: "ADMIN", label: "Quản trị viên" },
+  { value: "DAU_KHACH", label: "Sales" },
 ];
 
 export function UserManagementModal({ 
   user, 
-  currentUserRole,
   mode,
   isOpen, 
   onClose, 
@@ -157,23 +151,13 @@ export function UserManagementModal({
     }
   }, [user, mode, isOpen, reset]);
 
-  const filteredRoles = React.useMemo(() => {
-    let roles = ROLES.filter(r => r.value !== 'ADMIN');
-    
-    if (currentUserRole === 'GD_KHOI') {
-      roles = roles.filter(r => r.value !== 'GD_KHOI');
-    } else if (currentUserRole === 'TRUONG_PHONG') {
-      roles = roles.filter(r => r.value !== 'GD_KHOI' && r.value !== 'TRUONG_PHONG');
-    }
-    
-    return roles;
-  }, [currentUserRole]);
+  const filteredRoles = ROLES;
 
   const onSubmit = async (values: UserFormValues) => {
     setIsSubmitting(true);
     try {
       if (mode === "edit" && user) {
-        await onSave(user.id, values as any);
+        await onSave(user.id, values);
         toast.success("Cập nhật thông tin người dùng thành công!");
       } else if (mode === "create" && onCreate) {
         if (!values.password) {
@@ -185,9 +169,12 @@ export function UserManagementModal({
         toast.success("Tạo người dùng mới thành công!");
       }
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Submit error:", error);
-      const msg = error.response?.data?.message || "Có lỗi xảy ra.";
+      const apiError = error as {
+        response?: { data?: { message?: string | string[] } };
+      };
+      const msg = apiError.response?.data?.message || "Có lỗi xảy ra.";
       toast.error(Array.isArray(msg) ? msg[0] : msg);
     } finally {
       setIsSubmitting(false);
@@ -228,7 +215,7 @@ export function UserManagementModal({
       onConfirm: async () => {
         setIsSubmitting(true);
         try {
-          await onSave(user.id, { isActive: !user.isActive } as any);
+          await onSave(user.id, { isActive: !user.isActive });
           toast.success(`Đã ${action.toLowerCase()} tài khoản thành công!`);
         } catch {
           toast.error(`Không thể ${action.toLowerCase()} tài khoản.`);

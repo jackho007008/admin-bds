@@ -1,53 +1,47 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { AxiosError } from "axios";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuthStore } from "@/store/authStore";
-import { VillaSheetImportModal } from "@/components/organisms/VillaSheetImportModal";
-import { CustomerAccountModal } from "@/components/organisms/CustomerAccountModal";
+import { VillaCreateModal } from "@/components/organisms/VillaCreateModal";
+import { VillaImportCreateOwnerModal } from "@/components/admin/villa-import-create-owner-modal";
 import { VillaImportOwnersSection } from "@/components/admin/villa-import-owners-section";
 import { VillaImportSalesSection } from "@/components/admin/villa-import-sales-section";
-import { VillaImportCreateOwnerModal } from "@/components/admin/villa-import-create-owner-modal";
+import { VillaImportVillasSection } from "@/components/admin/villa-import-villas-section";
 import { VillaImportCreateSaleModal } from "@/components/admin/villa-import-create-sale-modal";
-import { VillaImportOwnerDetailsModal } from "@/components/admin/villa-import-owner-details-modal";
-import type {
-  DetailsTab,
-  GroupedVillaRate,
-} from "@/components/admin/villa-import-management.types";
 import { villaImportService } from "@/services/villaImportService";
-
-function getErrorMessage(error: unknown, fallback: string) {
-  const axiosError = error as AxiosError<{ message?: string | string[] }>;
-  const message = axiosError.response?.data?.message;
-
-  if (Array.isArray(message)) {
-    return message[0] || fallback;
-  }
-
-  return message || fallback;
-}
+import type {
+  Customer,
+  SaleAccount,
+  Villa,
+} from "@/services/villaImportService";
 
 export function VillaImportManagementContent({
   mode,
 }: {
-  mode: "owners" | "sales";
+  mode: "owners" | "sales" | "villas";
 }) {
-  const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const [isCreateOwnerModalOpen, setIsCreateOwnerModalOpen] = useState(false);
   const [isSheetConfigModalOpen, setIsSheetConfigModalOpen] = useState(false);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isCreateOwnerModalOpen, setIsCreateOwnerModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
-  const [customerAccountEmail, setCustomerAccountEmail] = useState("");
-  const [customerAccountPassword, setCustomerAccountPassword] = useState("");
-  const [customerAccountFullName, setCustomerAccountFullName] = useState("");
+  const [spreadsheetUrl, setSpreadsheetUrl] = useState("");
+  const [zaloLink, setZaloLink] = useState("");
+  const [tabMonthPatterns, setTabMonthPatterns] = useState<string[]>([
+    "tháng {month}/{year}",
+  ]);
+  const [bookedDetectionModes, setBookedDetectionModes] = useState<string[]>([
+    "cell_color",
+    "price_note",
+  ]);
+  const [bookedCellColors, setBookedCellColors] = useState<string[]>([
+    "#00a651",
+  ]);
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [isCreateVillaModalOpen, setIsCreateVillaModalOpen] = useState(false);
+  const [editingVilla, setEditingVilla] = useState<Villa | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [expandedVillaId, setExpandedVillaId] = useState<string | null>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [detailsTab, setDetailsTab] = useState<DetailsTab>("villas");
   const [isCreateSaleModalOpen, setIsCreateSaleModalOpen] = useState(false);
   const [saleFullName, setSaleFullName] = useState("");
   const [saleEmail, setSaleEmail] = useState("");
@@ -55,18 +49,12 @@ export function VillaImportManagementContent({
 
   const isOwnersMode = mode === "owners";
   const isSalesMode = mode === "sales";
-  const isOwnerAccount = user?.role === "DAU_CHU";
-
+  const isVillasMode = mode === "villas";
+  const isCustomerMode = isOwnersMode || isVillasMode;
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["villaImportCustomers"],
     queryFn: villaImportService.listCustomers,
-    enabled: isOwnersMode && !isOwnerAccount,
-  });
-
-  const { data: myVillas = [], isLoading: isLoadingMyVillas } = useQuery({
-    queryKey: ["myVillaImportVillas"],
-    queryFn: villaImportService.listMyVillas,
-    enabled: isOwnersMode && isOwnerAccount,
+    enabled: isCustomerMode,
   });
 
   const { data: sales = [], isLoading: isLoadingSales } = useQuery({
@@ -75,46 +63,14 @@ export function VillaImportManagementContent({
     enabled: isSalesMode,
   });
 
+  const effectiveSelectedCustomerId =
+    selectedCustomerId || (isVillasMode ? customers[0]?.id || "" : "");
+
   const { data: villas = [], isLoading: isLoadingVillas } = useQuery({
-    queryKey: ["customerVillas", selectedCustomerId],
-    queryFn: () => villaImportService.listCustomerVillas(selectedCustomerId),
-    enabled: isOwnersMode && !!selectedCustomerId,
-  });
-
-  const { data: rates = [], isLoading: isLoadingRates } = useQuery({
-    queryKey: ["customerRates", selectedCustomerId],
-    queryFn: () => villaImportService.listCustomerRates(selectedCustomerId),
-    enabled: isOwnersMode && !!selectedCustomerId,
-  });
-
-  const { data: customerAccountStatus } = useQuery({
-    queryKey: ["customerAccount", selectedCustomerId],
-    queryFn: () => villaImportService.getCustomerAccount(selectedCustomerId),
-    enabled: isOwnersMode && !!selectedCustomerId,
-  });
-
-  const resetCreateOwnerForm = () => {
-    setCustomerName("");
-    setCustomerNotes("");
-    setCustomerAccountEmail("");
-    setCustomerAccountPassword("");
-    setCustomerAccountFullName("");
-  };
-
-  const createCustomerMutation = useMutation({
-    mutationFn: villaImportService.createCustomer,
-    onSuccess: (customer) => {
-      toast.success("Đã tạo chủ villa");
-      resetCreateOwnerForm();
-      setSelectedCustomerId(customer.id);
-      setIsCreateOwnerModalOpen(false);
-      void queryClient.invalidateQueries({
-        queryKey: ["villaImportCustomers"],
-      });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Tạo chủ villa thất bại"));
-    },
+    queryKey: ["customerVillas", effectiveSelectedCustomerId],
+    queryFn: () =>
+      villaImportService.listCustomerVillas(effectiveSelectedCustomerId),
+    enabled: isVillasMode && !!effectiveSelectedCustomerId,
   });
 
   const createSaleMutation = useMutation({
@@ -132,92 +88,103 @@ export function VillaImportManagementContent({
       toast.error("Tạo sale thất bại");
     },
   });
-
-  const selectedCustomer = customers.find((item) => item.id === selectedCustomerId);
-
-  const groupedRates = useMemo(() => {
-    const grouped = new Map<string, GroupedVillaRate>();
-
-    for (const rate of rates) {
-      const current = grouped.get(rate.villaId);
-
-      if (!current) {
-        grouped.set(rate.villaId, {
-          villaId: rate.villaId,
-          villaName: rate.villa?.name || "Villa",
-          monthValue: rate.monthValue || null,
-          sheetName: rate.sourceSheetName,
-          rates: [rate],
-        });
-        continue;
-      }
-
-      current.rates.push(rate);
-      if (!current.monthValue && rate.monthValue) {
-        current.monthValue = rate.monthValue;
-      }
-    }
-
-    return Array.from(grouped.values())
-      .map((group) => ({
-        ...group,
-        rates: [...group.rates].sort((a, b) => {
-          if (a.stayDate && b.stayDate) {
-            return a.stayDate.localeCompare(b.stayDate);
-          }
-
-          return Number(a.dayLabel) - Number(b.dayLabel);
-        }),
-      }))
-      .sort((a, b) => a.villaName.localeCompare(b.villaName, "vi"));
-  }, [rates]);
+  const createCustomerMutation = useMutation({
+    mutationFn: (data: { name: string; notes?: string; metadata?: any }) =>
+      isEditingCustomer && selectedCustomerId
+        ? villaImportService.updateCustomer(selectedCustomerId, data)
+        : villaImportService.createCustomer(data),
+    onSuccess: () => {
+      toast.success(
+        isEditingCustomer ? "Đã cập nhật chủ nhà" : "Đã tạo chủ nhà mới",
+      );
+      setIsCreateOwnerModalOpen(false);
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportCustomers"],
+      });
+      setCustomerName("");
+      setCustomerNotes("");
+      setSpreadsheetUrl("");
+      setZaloLink("");
+      setTabMonthPatterns(["tháng {month}/{year}"]);
+      setBookedDetectionModes(["cell_color", "price_note"]);
+      setBookedCellColors(["#00a651"]);
+    },
+    onError: (error) => {
+      toast.error(
+        isEditingCustomer ? "Lỗi khi cập nhật chủ nhà" : "Lỗi khi tạo chủ nhà",
+      );
+      console.error(error);
+    },
+  });
 
   const handleCreateCustomer = () => {
     if (!customerName.trim()) {
-      toast.error("Nhập tên chủ villa trước");
+      toast.error("Vui lòng nhập tên chủ nhà");
       return;
     }
-
-    const email = customerAccountEmail.trim();
-    const password = customerAccountPassword.trim();
-
-    if ((email && !password) || (!email && password)) {
-      toast.error("Nhập đủ tài khoản và mật khẩu nếu muốn tạo luôn tài khoản");
-      return;
-    }
-
-    if (email && !customerAccountFullName.trim()) {
-      setCustomerAccountFullName(customerName.trim());
-    }
-
-    createCustomerMutation.mutate(
-      {
-        name: customerName.trim(),
-        notes: customerNotes.trim() || undefined,
+    createCustomerMutation.mutate({
+      name: customerName.trim(),
+      notes: customerNotes.trim(),
+      metadata: {
+        spreadsheetUrl: spreadsheetUrl.trim(),
+        zaloLink: zaloLink.trim(),
+        tabMonthPatterns: tabMonthPatterns.map((p) => p.trim()).filter(Boolean),
+        bookedDetectionModes,
+        bookedCellColors,
       },
-      {
-        onSuccess: async (customer) => {
-          if (email && password) {
-            try {
-              await villaImportService.createCustomerAccount(customer.id, {
-                email,
-                password,
-                fullName: customerAccountFullName.trim() || customerName.trim(),
-              });
-              toast.success("Đã tạo chủ villa và tài khoản đăng nhập");
-            } catch (error) {
-              toast.error(
-                getErrorMessage(
-                  error,
-                  "Đã tạo chủ villa nhưng chưa tạo được tài khoản",
-                ),
-              );
-            }
-          }
-        },
-      },
-    );
+    });
   };
+
+  const deleteVillaMutation = useMutation({
+    mutationFn: (villaId: string) =>
+      villaImportService.updateVilla(villaId, { isActive: false }),
+    onSuccess: () => {
+      toast.success("Đã xoá villa");
+      void queryClient.invalidateQueries({
+        queryKey: ["customerVillas", effectiveSelectedCustomerId],
+      });
+    },
+    onError: () => {
+      toast.error("Xoá villa thất bại");
+    },
+  });
+
+  const deleteCustomerMutation = useMutation({
+    mutationFn: villaImportService.deleteCustomer,
+    onSuccess: () => {
+      toast.success("Đã xoá sheet thành công");
+      if (selectedCustomerId === deleteCustomerMutation.variables) {
+        setSelectedCustomerId("");
+      }
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportCustomers"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportSources"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportTemplates"],
+      });
+    },
+    onError: () => {
+      toast.error("Xoá sheet thất bại");
+    },
+  });
+
+  const getVillaDetailMutation = useMutation({
+    mutationFn: villaImportService.getVilla,
+    onSuccess: (villa) => {
+      setEditingVilla(villa);
+      setIsCreateVillaModalOpen(true);
+    },
+    onError: () => {
+      toast.error("Không tải được chi tiết villa");
+    },
+  });
+
+  const selectedCustomer = customers.find(
+    (item) => item.id === effectiveSelectedCustomerId,
+  );
 
   const handleCreateSale = () => {
     if (!saleFullName.trim()) {
@@ -249,11 +216,47 @@ export function VillaImportManagementContent({
     );
   };
 
-  const openDetailsModal = (customerId: string, tab: DetailsTab) => {
-    setSelectedCustomerId(customerId);
-    setDetailsTab(tab);
-    setExpandedVillaId(null);
-    setIsDetailsModalOpen(true);
+  const openCreateOwnerModal = (customer?: Customer) => {
+    if (customer) {
+      setSelectedCustomerId(customer.id);
+      setCustomerName(customer.name);
+      setCustomerNotes(customer.notes || "");
+      setIsEditingCustomer(true);
+
+      const metadata: any = customer.metadata || {};
+      setSpreadsheetUrl(metadata.spreadsheetUrl || "");
+      setZaloLink(metadata.zaloLink || "");
+      setTabMonthPatterns(
+        metadata.tabMonthPatterns || ["tháng {month}/{year}"],
+      );
+      setBookedDetectionModes(
+        metadata.bookedDetectionModes || ["cell_color", "price_note"],
+      );
+      setBookedCellColors(metadata.bookedCellColors || ["#00a651"]);
+    } else {
+      setSelectedCustomerId("");
+      setCustomerName("");
+      setCustomerNotes("");
+      setSpreadsheetUrl("");
+      setZaloLink("");
+      setTabMonthPatterns(["tháng {month}/{year}"]);
+      setBookedDetectionModes(["cell_color", "price_note"]);
+      setBookedCellColors(["#00a651"]);
+      setIsEditingCustomer(false);
+    }
+    setIsCreateOwnerModalOpen(true);
+  };
+
+  const handleSheetSaved = () => {
+    void queryClient.invalidateQueries({
+      queryKey: ["villaImportCustomers"],
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["villaImportSources"],
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["villaImportTemplates"],
+    });
   };
 
   return (
@@ -261,73 +264,46 @@ export function VillaImportManagementContent({
       <section className="grid gap-6">
         <div className="space-y-6 rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
           {isOwnersMode ? (
-            isOwnerAccount ? (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Danh sách villa
-                  </h2>
-                  <p className="mt-2 text-sm leading-7 text-slate-500">
-                    Đây là các villa đang thuộc quyền quản lý của bạn.
-                  </p>
-                </div>
+            <VillaImportOwnersSection
+              customers={customers}
+              isLoadingCustomers={isLoadingCustomers}
+              selectedCustomerId={selectedCustomerId}
+              onOpenCreateOwnerModal={() => openCreateOwnerModal()}
+              onSelectCustomer={(id) => {
+                const customer = customers.find((c) => c.id === id);
+                if (customer) openCreateOwnerModal(customer);
+              }}
+              onDeleteCustomer={(id) => deleteCustomerMutation.mutate(id)}
+            />
+          ) : null}
 
-                <div className="space-y-3">
-                  {isLoadingMyVillas ? (
-                    <div className="text-sm text-slate-500">
-                      Đang tải danh sách villa...
-                    </div>
-                  ) : myVillas.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                      Bạn chưa có villa nào được import.
-                    </div>
-                  ) : (
-                    myVillas.map((villa) => (
-                      <div
-                        key={villa.id}
-                        className="rounded-2xl border border-slate-200 bg-white p-5"
-                      >
-                        <div className="font-semibold text-slate-900">
-                          {villa.name}
-                        </div>
-                        <div className="mt-2 text-sm text-slate-600">
-                          Sheet: {villa.sourceSheetName || "N/A"} • Ô nguồn:{" "}
-                          {villa.sourceCellRef || "N/A"}
-                        </div>
-                        <div className="mt-1 text-sm text-slate-600">
-                          Giá gần nhất:{" "}
-                          {villa.latestRate?.price
-                            ? villa.latestRate.price.toLocaleString("vi-VN")
-                            : "Chưa có giá"}
-                        </div>
-                        {villa.latestRate?.stayDate ? (
-                          <div className="mt-1 text-xs text-slate-500">
-                            Ngày áp dụng gần nhất: {villa.latestRate.stayDate}
-                          </div>
-                        ) : null}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            ) : (
-              <VillaImportOwnersSection
-                customers={customers}
-                isLoadingCustomers={isLoadingCustomers}
-                selectedCustomerId={selectedCustomerId}
-                onOpenCreateOwnerModal={() => setIsCreateOwnerModalOpen(true)}
-                onSelectCustomer={setSelectedCustomerId}
-                onOpenSheetConfig={(customerId) => {
-                  setSelectedCustomerId(customerId);
-                  setIsSheetConfigModalOpen(true);
-                }}
-                onOpenAccount={(customerId) => {
-                  setSelectedCustomerId(customerId);
-                  setIsAccountModalOpen(true);
-                }}
-                onOpenDetails={openDetailsModal}
-              />
-            )
+          {isVillasMode ? (
+            <VillaImportVillasSection
+              customers={customers}
+              villas={villas}
+              selectedCustomerId={effectiveSelectedCustomerId}
+              isLoadingCustomers={isLoadingCustomers}
+              isLoadingVillas={isLoadingVillas}
+              onSelectCustomer={setSelectedCustomerId}
+              onOpenCreateVilla={() => {
+                setEditingVilla(null);
+                setIsCreateVillaModalOpen(true);
+              }}
+              onOpenEditVilla={(villa) => {
+                getVillaDetailMutation.mutate(villa.id);
+              }}
+              onDeleteVilla={(villa) => deleteVillaMutation.mutate(villa.id)}
+              onRefreshVillas={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: ["villaImportCustomers"],
+                });
+                if (effectiveSelectedCustomerId) {
+                  void queryClient.invalidateQueries({
+                    queryKey: ["customerVillas", effectiveSelectedCustomerId],
+                  });
+                }
+              }}
+            />
           ) : null}
 
           {isSalesMode ? (
@@ -335,83 +311,55 @@ export function VillaImportManagementContent({
               sales={sales}
               isLoadingSales={isLoadingSales}
               onOpenCreateSaleModal={() => setIsCreateSaleModalOpen(true)}
+              onRefreshSales={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: ["villaImportSales"],
+                });
+              }}
             />
           ) : null}
         </div>
       </section>
 
-      {isOwnersMode && !isOwnerAccount ? (
+      {isOwnersMode ? (
         <>
           <VillaImportCreateOwnerModal
             isOpen={isCreateOwnerModalOpen}
+            onOpenChange={setIsCreateOwnerModalOpen}
             customerName={customerName}
             customerNotes={customerNotes}
-            customerAccountEmail={customerAccountEmail}
-            customerAccountPassword={customerAccountPassword}
-            customerAccountFullName={customerAccountFullName}
+            spreadsheetUrl={spreadsheetUrl}
+            zaloLink={zaloLink}
+            tabMonthPatterns={tabMonthPatterns}
+            bookedDetectionModes={bookedDetectionModes}
+            bookedCellColors={bookedCellColors}
+            isEditing={isEditingCustomer}
             isSubmitting={createCustomerMutation.isPending}
-            onOpenChange={(open) => {
-              if (!open) {
-                setIsCreateOwnerModalOpen(false);
-                resetCreateOwnerForm();
-                return;
-              }
-              setIsCreateOwnerModalOpen(true);
-            }}
             onCustomerNameChange={setCustomerName}
             onCustomerNotesChange={setCustomerNotes}
-            onCustomerAccountEmailChange={setCustomerAccountEmail}
-            onCustomerAccountPasswordChange={setCustomerAccountPassword}
-            onCustomerAccountFullNameChange={setCustomerAccountFullName}
+            onSpreadsheetUrlChange={setSpreadsheetUrl}
+            onZaloLinkChange={setZaloLink}
+            onTabMonthPatternsChange={setTabMonthPatterns}
+            onBookedDetectionModesChange={setBookedDetectionModes}
+            onBookedCellColorsChange={setBookedCellColors}
             onSubmit={handleCreateCustomer}
-            onClose={() => {
-              setIsCreateOwnerModalOpen(false);
-              resetCreateOwnerForm();
-            }}
-          />
-
-          <VillaImportOwnerDetailsModal
-            isOpen={isDetailsModalOpen}
-            selectedCustomerName={selectedCustomer?.name}
-            selectedCustomerId={selectedCustomerId}
-            detailsTab={detailsTab}
-            isLoadingVillas={isLoadingVillas}
-            villas={villas}
-            isLoadingRates={isLoadingRates}
-            rates={rates}
-            groupedRates={groupedRates}
-            expandedVillaId={expandedVillaId}
-            onOpenChange={setIsDetailsModalOpen}
-            onTabChange={setDetailsTab}
-            onExpandedVillaChange={(villaId) =>
-              setExpandedVillaId((current) =>
-                current === villaId ? null : villaId,
-              )
-            }
-          />
-
-          <VillaSheetImportModal
-            isOpen={isSheetConfigModalOpen}
-            onClose={() => setIsSheetConfigModalOpen(false)}
-            customerId={selectedCustomerId || undefined}
-            customerName={selectedCustomer?.name}
-            onImported={() => {
-              void queryClient.invalidateQueries({
-                queryKey: ["customerVillas", selectedCustomerId],
-              });
-              void queryClient.invalidateQueries({
-                queryKey: ["customerRates", selectedCustomerId],
-              });
-            }}
-          />
-          <CustomerAccountModal
-            isOpen={isAccountModalOpen}
-            onClose={() => setIsAccountModalOpen(false)}
-            customerId={selectedCustomerId || undefined}
-            customerName={selectedCustomer?.name}
-            accountStatus={customerAccountStatus}
+            onClose={() => setIsCreateOwnerModalOpen(false)}
           />
         </>
+      ) : null}
+
+      {isVillasMode && isCreateVillaModalOpen ? (
+        <VillaCreateModal
+          key={`${effectiveSelectedCustomerId || "new-villa"}-${editingVilla?.id || "create"}`}
+          isOpen={isCreateVillaModalOpen}
+          onClose={() => {
+            setIsCreateVillaModalOpen(false);
+            setEditingVilla(null);
+          }}
+          customerId={effectiveSelectedCustomerId || undefined}
+          customerName={selectedCustomer?.name}
+          villa={editingVilla}
+        />
       ) : null}
 
       {isSalesMode ? (

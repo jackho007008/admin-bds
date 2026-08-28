@@ -21,31 +21,35 @@ export type OwnersSectionProps = {
   selectedCustomerId: string;
   onOpenCreateOwnerModal: () => void;
   onSelectCustomer: (customerId: string) => void;
-  onOpenSheetConfig: (customerId: string) => void;
-  onOpenAccount: (customerId: string) => void;
-  onOpenDetails: (customerId: string, tab: DetailsTab) => void;
+  onDeleteCustomer: (customerId: string) => void;
 };
 
 export type SalesSectionProps = {
   sales: SaleAccount[];
   isLoadingSales: boolean;
   onOpenCreateSaleModal: () => void;
+  onRefreshSales: () => void;
 };
 
 export type CreateOwnerModalProps = {
   isOpen: boolean;
   customerName: string;
   customerNotes: string;
-  customerAccountEmail: string;
-  customerAccountPassword: string;
-  customerAccountFullName: string;
+  spreadsheetUrl: string;
+  zaloLink: string;
+  tabMonthPatterns: string[];
+  bookedDetectionModes: string[];
+  bookedCellColors: string[];
+  isEditing?: boolean;
   isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onCustomerNameChange: (value: string) => void;
   onCustomerNotesChange: (value: string) => void;
-  onCustomerAccountEmailChange: (value: string) => void;
-  onCustomerAccountPasswordChange: (value: string) => void;
-  onCustomerAccountFullNameChange: (value: string) => void;
+  onSpreadsheetUrlChange: (value: string) => void;
+  onZaloLinkChange: (value: string) => void;
+  onTabMonthPatternsChange: (values: string[]) => void;
+  onBookedDetectionModesChange: (values: string[]) => void;
+  onBookedCellColorsChange: (values: string[]) => void;
   onSubmit: () => void;
   onClose: () => void;
 };
@@ -78,4 +82,5 @@ export type OwnerDetailsModalProps = {
   onOpenChange: (open: boolean) => void;
   onTabChange: (tab: DetailsTab) => void;
   onExpandedVillaChange: (villaId: string) => void;
+  onOpenCreateVilla: () => void;
 };

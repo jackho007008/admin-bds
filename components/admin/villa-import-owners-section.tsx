@@ -12,34 +12,32 @@ export function VillaImportOwnersSection({
   selectedCustomerId,
   onOpenCreateOwnerModal,
   onSelectCustomer,
-  onOpenSheetConfig,
-  onOpenAccount,
-  onOpenDetails,
+  onDeleteCustomer,
 }: OwnersSectionProps) {
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Quản lý chủ villa</h2>
+          <h2 className="text-xl font-bold text-slate-900">Quản lý sheet</h2>
           <p className="mt-2 text-sm leading-7 text-slate-500">
-            Mỗi chủ villa sẽ có một danh sách villa riêng.
+            Mỗi sheet đại diện cho một nguồn Google Sheet và cấu hình đọc tháng.
           </p>
         </div>
         <Button type="button" className="rounded-2xl" onClick={onOpenCreateOwnerModal}>
           <Plus className="mr-2 h-4 w-4" />
-          Tạo chủ villa
+          Tạo sheet
         </Button>
       </div>
 
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Chủ villa hiện có</h3>
+        <h3 className="text-base font-semibold text-slate-900">Sheet hiện có</h3>
         <div className="mt-4 space-y-3">
           {isLoadingCustomers ? (
-            <div className="text-sm text-slate-500">Đang tải chủ villa...</div>
+            <div className="text-sm text-slate-500">Đang tải sheet...</div>
           ) : customers.length === 0 ? (
-            <div className="text-sm text-slate-500">Chưa có chủ villa nào.</div>
+            <div className="text-sm text-slate-500">Chưa có sheet nào.</div>
           ) : (
             customers.map((customer) => (
               <VillaImportCustomerCard
@@ -47,9 +45,7 @@ export function VillaImportOwnersSection({
                 customer={customer}
                 isSelected={selectedCustomerId === customer.id}
                 onSelect={onSelectCustomer}
-                onOpenSheetConfig={onOpenSheetConfig}
-                onOpenAccount={onOpenAccount}
-                onOpenDetails={onOpenDetails}
+                onDelete={onDeleteCustomer}
               />
             ))
           )}

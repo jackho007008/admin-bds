@@ -38,7 +38,7 @@ export function VillaImportCreateSaleModal({
           </div>
           <AppModalTitle className="pt-3">Tạo sale</AppModalTitle>
           <AppModalDescription>
-            Sale được tạo ở đây sẽ dùng role TRUONG_PHONG.
+            Sale được tạo ở đây sẽ dùng quyền Sales.
           </AppModalDescription>
         </AppModalHeader>
 
