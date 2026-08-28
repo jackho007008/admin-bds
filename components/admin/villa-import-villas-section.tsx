@@ -161,9 +161,7 @@ export function VillaImportVillasSection({
             <Home className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">
-              Quản lý villa
-            </h2>
+            <h2 className="text-2xl font-bold text-slate-900">Quản lý villa</h2>
             <p className="mt-1 text-sm text-slate-500">
               Chọn sheet, tìm kiếm và quản lý danh sách villa.
             </p>
@@ -206,7 +204,11 @@ export function VillaImportVillasSection({
               <SelectTrigger className="h-12 w-full rounded-2xl px-4">
                 <div className="flex min-w-0 items-center gap-2">
                   <Sheet className="h-4 w-4 shrink-0 text-emerald-600" />
-                  <span className={selectedCustomer ? "truncate" : "truncate text-slate-400"}>
+                  <span
+                    className={
+                      selectedCustomer ? "truncate" : "truncate text-slate-400"
+                    }
+                  >
                     {selectedCustomer?.name ||
                       (isLoadingCustomers ? "Đang tải sheet..." : "Chọn sheet")}
                   </span>
@@ -331,27 +333,39 @@ export function VillaImportVillasSection({
                         <span className="truncate text-[13px] font-semibold text-slate-700">
                           {priceZone}
                         </span>
-                        <span className="truncate text-[11px] font-medium text-slate-400">
-                          Sheet: {villa.sourceSheetName || "---"}
-                        </span>
                       </div>
                     </TableCell>
 
                     <TableCell className="px-4 py-3">
-                      {zaloLink ? (
-                        <a
-                          href={zaloLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[13px] font-semibold text-emerald-700 hover:underline"
-                        >
-                          Zalo
-                        </a>
-                      ) : (
-                        <span className="text-[13px] font-medium text-slate-400">
-                          ---
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {zaloLink ? (
+                          <a
+                            href={zaloLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[13px] font-semibold text-blue-600 hover:underline"
+                          >
+                            Zalo
+                          </a>
+                        ) : null}
+                        {googleMapsUrl && googleMapsUrl.startsWith("http") ? (
+                          <a
+                            href={googleMapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[13px] font-semibold text-emerald-700 hover:underline"
+                          >
+                            Google Maps
+                          </a>
+                        ) : null}
+                        {!zaloLink &&
+                        (!googleMapsUrl ||
+                          !googleMapsUrl.startsWith("http")) ? (
+                          <span className="text-[13px] font-medium text-slate-400">
+                            ---
+                          </span>
+                        ) : null}
+                      </div>
                     </TableCell>
 
                     <TableCell className="px-4 py-3">
