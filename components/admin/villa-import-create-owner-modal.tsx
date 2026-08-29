@@ -34,6 +34,7 @@ export function VillaImportCreateOwnerModal({
   spreadsheetUrl,
   zaloLink,
   tabMonthPatterns,
+  pricePatterns,
   bookedDetectionModes,
   bookedCellColors,
   onOpenChange,
@@ -42,6 +43,7 @@ export function VillaImportCreateOwnerModal({
   onSpreadsheetUrlChange,
   onZaloLinkChange,
   onTabMonthPatternsChange,
+  onPricePatternsChange,
   onBookedDetectionModesChange,
   onBookedCellColorsChange,
   onSubmit,
@@ -118,6 +120,25 @@ export function VillaImportCreateOwnerModal({
     onTabMonthPatternsChange(newPatterns);
   };
 
+  const handleAddPricePattern = () => {
+    onPricePatternsChange([...pricePatterns, { pattern: "", multiplier: 1 }]);
+  };
+
+  const handleUpdatePricePattern = (
+    index: number,
+    field: "pattern" | "multiplier",
+    value: any,
+  ) => {
+    const newPatterns = [...pricePatterns];
+    newPatterns[index] = { ...newPatterns[index], [field]: value };
+    onPricePatternsChange(newPatterns);
+  };
+
+  const handleRemovePricePattern = (index: number) => {
+    const newPatterns = pricePatterns.filter((_, i) => i !== index);
+    onPricePatternsChange(newPatterns);
+  };
+
   const handleAddColor = () => {
     onBookedCellColorsChange([...bookedCellColors, "#00a651"]);
   };
@@ -186,6 +207,77 @@ export function VillaImportCreateOwnerModal({
                     variant="outline"
                     size="sm"
                     onClick={handleAddTabPattern}
+                    className="rounded-xl"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Thêm
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <Label>Cấu hình cấu trúc giá</Label>
+              <div className="space-y-2">
+                {pricePatterns && pricePatterns.length > 0 && (
+                  <div className="flex items-center gap-2 mb-1 px-1">
+                    <div className="grid grid-cols-2 gap-2 flex-1">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Mẫu giá
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Hệ số nhân
+                      </span>
+                    </div>
+                    <div className="w-10"></div>
+                  </div>
+                )}
+                {pricePatterns?.map((pattern, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2 flex-1">
+                      <Input
+                        value={pattern.pattern}
+                        onChange={(e) =>
+                          handleUpdatePricePattern(
+                            index,
+                            "pattern",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Mẫu (VD: {price}tr)"
+                      />
+                      <Input
+                        type="number"
+                        value={pattern.multiplier}
+                        onChange={(e) =>
+                          handleUpdatePricePattern(
+                            index,
+                            "multiplier",
+                            Number(e.target.value),
+                          )
+                        }
+                        placeholder="Hệ số (VD: 1000000)"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 h-10 w-10 text-slate-400 hover:text-red-500"
+                      onClick={() => handleRemovePricePattern(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddPricePattern}
                     className="rounded-xl"
                   >
                     <Plus className="mr-1 h-3 w-3" />

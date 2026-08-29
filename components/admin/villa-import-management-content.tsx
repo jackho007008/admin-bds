@@ -4,6 +4,16 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { VillaCreateModal } from "@/components/organisms/VillaCreateModal";
+import {
+  CreateOwnerModalProps,
+  CreateSaleModalProps,
+  DetailsTab,
+  GroupedVillaRate,
+  OwnerDetailsModalProps,
+  OwnersSectionProps,
+  SalesSectionProps,
+  PricePatternConfig,
+} from "./villa-import-management.types";
 import { VillaImportCreateOwnerModal } from "@/components/admin/villa-import-create-owner-modal";
 import { VillaImportOwnersSection } from "@/components/admin/villa-import-owners-section";
 import { VillaImportSalesSection } from "@/components/admin/villa-import-sales-section";
@@ -31,6 +41,7 @@ export function VillaImportManagementContent({
   const [tabMonthPatterns, setTabMonthPatterns] = useState<string[]>([
     "tháng {month}/{year}",
   ]);
+  const [pricePatterns, setPricePatterns] = useState<PricePatternConfig[]>([]);
   const [bookedDetectionModes, setBookedDetectionModes] = useState<string[]>([
     "cell_color",
     "price_note",
@@ -129,6 +140,7 @@ export function VillaImportManagementContent({
         spreadsheetUrl: spreadsheetUrl.trim(),
         zaloLink: zaloLink.trim(),
         tabMonthPatterns: tabMonthPatterns.map((p) => p.trim()).filter(Boolean),
+        pricePatterns: pricePatterns.filter((p) => p.pattern.trim()),
         bookedDetectionModes,
         bookedCellColors,
       },
@@ -229,6 +241,7 @@ export function VillaImportManagementContent({
       setTabMonthPatterns(
         metadata.tabMonthPatterns || ["tháng {month}/{year}"],
       );
+      setPricePatterns(metadata.pricePatterns || []);
       setBookedDetectionModes(
         metadata.bookedDetectionModes || ["cell_color", "price_note"],
       );
@@ -240,6 +253,7 @@ export function VillaImportManagementContent({
       setSpreadsheetUrl("");
       setZaloLink("");
       setTabMonthPatterns(["tháng {month}/{year}"]);
+      setPricePatterns([]);
       setBookedDetectionModes(["cell_color", "price_note"]);
       setBookedCellColors(["#00a651"]);
       setIsEditingCustomer(false);
@@ -331,6 +345,7 @@ export function VillaImportManagementContent({
             spreadsheetUrl={spreadsheetUrl}
             zaloLink={zaloLink}
             tabMonthPatterns={tabMonthPatterns}
+            pricePatterns={pricePatterns}
             bookedDetectionModes={bookedDetectionModes}
             bookedCellColors={bookedCellColors}
             isEditing={isEditingCustomer}
@@ -340,6 +355,7 @@ export function VillaImportManagementContent({
             onSpreadsheetUrlChange={setSpreadsheetUrl}
             onZaloLinkChange={setZaloLink}
             onTabMonthPatternsChange={setTabMonthPatterns}
+            onPricePatternsChange={setPricePatterns}
             onBookedDetectionModesChange={setBookedDetectionModes}
             onBookedCellColorsChange={setBookedCellColors}
             onSubmit={handleCreateCustomer}

@@ -15,6 +15,11 @@ export type GroupedVillaRate = {
   rates: VillaDailyRate[];
 };
 
+export type PricePatternConfig = {
+  pattern: string;
+  multiplier: number;
+};
+
 export type OwnersSectionProps = {
   customers: Customer[];
   isLoadingCustomers: boolean;
@@ -38,6 +43,7 @@ export type CreateOwnerModalProps = {
   spreadsheetUrl: string;
   zaloLink: string;
   tabMonthPatterns: string[];
+  pricePatterns: PricePatternConfig[];
   bookedDetectionModes: string[];
   bookedCellColors: string[];
   isEditing?: boolean;
@@ -48,6 +54,7 @@ export type CreateOwnerModalProps = {
   onSpreadsheetUrlChange: (value: string) => void;
   onZaloLinkChange: (value: string) => void;
   onTabMonthPatternsChange: (values: string[]) => void;
+  onPricePatternsChange: (values: PricePatternConfig[]) => void;
   onBookedDetectionModesChange: (values: string[]) => void;
   onBookedCellColorsChange: (values: string[]) => void;
   onSubmit: () => void;
