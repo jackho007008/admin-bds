@@ -52,7 +52,6 @@ export type CreateOwnerModalProps = {
   onCustomerNameChange: (value: string) => void;
   onCustomerNotesChange: (value: string) => void;
   onSpreadsheetUrlChange: (value: string) => void;
-  onZaloLinkChange: (value: string) => void;
   onTabMonthPatternsChange: (values: string[]) => void;
   onPricePatternsChange: (values: PricePatternConfig[]) => void;
   onBookedDetectionModesChange: (values: string[]) => void;

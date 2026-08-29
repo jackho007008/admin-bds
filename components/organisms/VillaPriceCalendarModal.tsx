@@ -1,12 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns";
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+} from "date-fns";
 import { vi } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import { villaImportService } from "@/services/villaImportService";
 import { Villa, VillaDailyRate } from "@/services/villaImportService";
 import { cn } from "@/lib/utils";
@@ -51,12 +72,15 @@ export function VillaPriceCalendarModal({
       if (!rate.stayDate) return false;
       // Handle "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss.sssZ" reliably
       // by comparing the YYYY-MM-DD portion directly
-      const rateDateStr = typeof rate.stayDate === 'string' 
-        ? rate.stayDate.split('T')[0] 
-        : new Date(rate.stayDate).toISOString().split('T')[0];
+      const rateDateStr =
+        typeof rate.stayDate === "string"
+          ? rate.stayDate.split("T")[0]
+          : new Date(rate.stayDate).toISOString().split("T")[0];
       const targetDateStr = format(day, "yyyy-MM-dd");
-      
-      return rateDateStr === targetDateStr || isSameDay(new Date(rate.stayDate), day);
+
+      return (
+        rateDateStr === targetDateStr || isSameDay(new Date(rate.stayDate), day)
+      );
     });
   };
 
@@ -94,10 +118,20 @@ export function VillaPriceCalendarModal({
                 {format(currentDate, dateFormat, { locale: vi })}
               </h2>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={prevMonth} className="h-9 w-9 rounded-xl">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={prevMonth}
+                  className="h-9 w-9 rounded-xl"
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={nextMonth} className="h-9 w-9 rounded-xl">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={nextMonth}
+                  className="h-9 w-9 rounded-xl"
+                >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -106,7 +140,10 @@ export function VillaPriceCalendarModal({
             {/* Days of Week */}
             <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/50">
               {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((day) => (
-                <div key={day} className="py-3 text-center text-xs font-semibold text-slate-500">
+                <div
+                  key={day}
+                  className="py-3 text-center text-xs font-semibold text-slate-500"
+                >
                   {day}
                 </div>
               ))}
@@ -117,55 +154,85 @@ export function VillaPriceCalendarModal({
               {isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm">
                   <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
-                  <p className="text-sm font-medium text-slate-600">Đang tải lịch giá...</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Đang tải lịch giá...
+                  </p>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-7 bg-slate-200 gap-[1px]">
                 {daysInCalendar.map((day, idx) => {
                   const isCurrentMonth = isSameMonth(day, monthStart);
                   const isToday = isSameDay(day, new Date());
                   const rate = getRateForDay(day);
                   const hasError = rate?.parseStatus === "ERROR";
+                  const isBooked = rate?.isBooked;
 
                   return (
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "min-h-[100px] bg-white p-2 transition-colors",
-                        !isCurrentMonth && "bg-slate-50 text-slate-400",
-                        isToday && "bg-indigo-50/30"
+                        "min-h-[100px] p-2 transition-colors border-r border-b border-white/50",
+                        !isCurrentMonth
+                          ? "bg-slate-50 text-slate-400"
+                          : isBooked
+                            ? hasError
+                              ? "bg-amber-50"
+                              : "bg-red-50"
+                            : "bg-emerald-50",
+                        isToday && "ring-2 ring-indigo-500 ring-inset",
                       )}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span
                           className={cn(
                             "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
-                            isToday ? "bg-indigo-600 text-white" : isCurrentMonth ? "text-slate-700" : "text-slate-400"
+                            isToday
+                              ? "bg-indigo-600 text-white"
+                              : isCurrentMonth
+                                ? isBooked
+                                  ? "text-red-700"
+                                  : "text-emerald-700"
+                                : "text-slate-400",
                           )}
                         >
                           {format(day, "d")}
                         </span>
                       </div>
-                      
-                      {rate && rate.price != null && (
-                        <div className={cn(
-                          "mt-1 p-1.5 rounded-lg border text-xs font-medium flex flex-col gap-1",
-                          hasError 
-                            ? "bg-red-50 border-red-200 text-red-700" 
-                            : "bg-emerald-50 border-emerald-200 text-emerald-700"
-                        )}>
-                          <span className="truncate" title={rate.rawValue || ""}>
-                            {formatPrice(rate.price, rate.rawValue)}
-                          </span>
-                          
+
+                      {rate && (
+                        <div
+                          className={cn(
+                            "mt-1 p-1.5 rounded-lg border text-xs font-medium flex flex-col gap-1",
+                            hasError
+                              ? "bg-white/80 border-amber-200 text-amber-700"
+                              : isBooked
+                                ? "bg-white/80 border-red-200 text-red-700"
+                                : "bg-white/80 border-emerald-200 text-emerald-700",
+                          )}
+                        >
+                          {(rate.price != null || rate.rawValue) && (
+                            <span
+                              className="truncate font-semibold"
+                              title={rate.rawValue || ""}
+                            >
+                              {formatPrice(rate.price, rate.rawValue)}
+                            </span>
+                          )}
+
                           {rate.guestName && (
-                            <span className="truncate text-[10px] text-slate-500 font-normal" title={rate.guestName}>
+                            <span
+                              className="truncate text-[10px] text-slate-500 font-normal"
+                              title={rate.guestName}
+                            >
                               Khách: {rate.guestName}
                             </span>
                           )}
                           {rate.note && (
-                            <span className="truncate text-[10px] text-amber-600 font-normal" title={rate.note}>
+                            <span
+                              className="truncate text-[10px] text-amber-600 font-normal"
+                              title={rate.note}
+                            >
                               {rate.note}
                             </span>
                           )}
@@ -177,7 +244,7 @@ export function VillaPriceCalendarModal({
               </div>
             </div>
           </div>
-          
+
           <div className="mt-6 flex justify-end">
             <Button onClick={onClose} className="rounded-xl px-6">
               Đóng

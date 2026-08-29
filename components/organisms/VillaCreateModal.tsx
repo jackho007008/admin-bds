@@ -38,6 +38,7 @@ type VillaCreateForm = {
   floors: string;
   bedrooms: string;
   toilets: string;
+  maxGuests: string;
   description: string;
 };
 
@@ -54,6 +55,7 @@ const initialForm: VillaCreateForm = {
   floors: "1",
   bedrooms: "1",
   toilets: "1",
+  maxGuests: "4",
   description: "",
 };
 
@@ -137,6 +139,7 @@ function buildInitialVillaForm(villa?: Villa | null): VillaCreateForm {
     floors: villa.floors ? String(villa.floors) : "1",
     bedrooms: villa.bedrooms ? String(villa.bedrooms) : "1",
     toilets: villa.toilets ? String(villa.toilets) : "1",
+    maxGuests: villa.maxGuests ? String(villa.maxGuests) : "4",
     description: villa.description || "",
   };
 }
@@ -305,6 +308,7 @@ export function VillaCreateModal({
       formData.append("floors", form.floors || "1");
       formData.append("bedrooms", form.bedrooms || "1");
       formData.append("toilets", form.toilets || "1");
+      formData.append("maxGuests", form.maxGuests || "4");
 
       selectedImages.forEach((file) => {
         formData.append("images", file);
@@ -537,6 +541,13 @@ export function VillaCreateModal({
                 <Input
                   value={form.toilets}
                   onChange={(e) => updateField("toilets", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Số khách tối đa</Label>
+                <Input
+                  value={form.maxGuests}
+                  onChange={(e) => updateField("maxGuests", e.target.value)}
                 />
               </div>
             </div>

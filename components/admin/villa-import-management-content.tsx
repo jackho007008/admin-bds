@@ -37,7 +37,6 @@ export function VillaImportManagementContent({
   const [customerName, setCustomerName] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
   const [spreadsheetUrl, setSpreadsheetUrl] = useState("");
-  const [zaloLink, setZaloLink] = useState("");
   const [tabMonthPatterns, setTabMonthPatterns] = useState<string[]>([
     "tháng {month}/{year}",
   ]);
@@ -138,7 +137,6 @@ export function VillaImportManagementContent({
       notes: customerNotes.trim(),
       metadata: {
         spreadsheetUrl: spreadsheetUrl.trim(),
-        zaloLink: zaloLink.trim(),
         tabMonthPatterns: tabMonthPatterns.map((p) => p.trim()).filter(Boolean),
         pricePatterns: pricePatterns.filter((p) => p.pattern.trim()),
         bookedDetectionModes,
@@ -237,7 +235,6 @@ export function VillaImportManagementContent({
 
       const metadata: any = customer.metadata || {};
       setSpreadsheetUrl(metadata.spreadsheetUrl || "");
-      setZaloLink(metadata.zaloLink || "");
       setTabMonthPatterns(
         metadata.tabMonthPatterns || ["tháng {month}/{year}"],
       );
@@ -251,7 +248,6 @@ export function VillaImportManagementContent({
       setCustomerName("");
       setCustomerNotes("");
       setSpreadsheetUrl("");
-      setZaloLink("");
       setTabMonthPatterns(["tháng {month}/{year}"]);
       setPricePatterns([]);
       setBookedDetectionModes(["cell_color", "price_note"]);
@@ -343,7 +339,6 @@ export function VillaImportManagementContent({
             customerName={customerName}
             customerNotes={customerNotes}
             spreadsheetUrl={spreadsheetUrl}
-            zaloLink={zaloLink}
             tabMonthPatterns={tabMonthPatterns}
             pricePatterns={pricePatterns}
             bookedDetectionModes={bookedDetectionModes}
@@ -353,7 +348,6 @@ export function VillaImportManagementContent({
             onCustomerNameChange={setCustomerName}
             onCustomerNotesChange={setCustomerNotes}
             onSpreadsheetUrlChange={setSpreadsheetUrl}
-            onZaloLinkChange={setZaloLink}
             onTabMonthPatternsChange={setTabMonthPatterns}
             onPricePatternsChange={setPricePatterns}
             onBookedDetectionModesChange={setBookedDetectionModes}

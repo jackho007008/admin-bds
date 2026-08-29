@@ -49,6 +49,7 @@ export interface Villa {
   floors?: number | null;
   bedrooms?: number | null;
   toilets?: number | null;
+  maxGuests?: number | null;
   notes?: string | null;
   images?: string[];
   imageKeys?: string[];
@@ -98,6 +99,7 @@ export interface UpdateVillaPayload {
   floors?: number | null;
   bedrooms?: number | null;
   toilets?: number | null;
+  maxGuests?: number | null;
   notes?: string | null;
   images?: string[] | null;
   metadata?: Record<string, unknown> | null;
@@ -117,6 +119,7 @@ export interface VillaDailyRate {
   guestName?: string | null;
   note?: string | null;
   parseStatus: string;
+  isBooked: boolean;
   sourceSheetName: string;
   sourceCellRef: string;
   villa: Villa;

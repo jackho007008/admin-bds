@@ -298,16 +298,6 @@ export function VillaImportCreateOwnerModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="zaloLink">Link Zalo</Label>
-            <Input
-              id="zaloLink"
-              value={zaloLink}
-              onChange={(e) => onZaloLinkChange(e.target.value)}
-              placeholder="Dán link Zalo của sheet"
-            />
-          </div>
-
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-slate-900">

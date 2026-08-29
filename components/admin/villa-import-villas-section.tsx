@@ -244,19 +244,19 @@ export function VillaImportVillasSection({
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="border-slate-100 hover:bg-transparent">
-              <TableHead className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              <TableHead className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Villa
               </TableHead>
-              <TableHead className="w-[180px] px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              <TableHead className="w-[180px] px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Giá
               </TableHead>
-              <TableHead className="w-[120px] px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              <TableHead className="w-[120px] px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Liên hệ
               </TableHead>
-              <TableHead className="w-[130px] px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              <TableHead className="w-[130px] px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Ngày tạo
               </TableHead>
-              <TableHead className="w-[80px] px-6 py-4 text-right text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              <TableHead className="w-[80px] px-6 py-4 text-right text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Thao tác
               </TableHead>
             </TableRow>
