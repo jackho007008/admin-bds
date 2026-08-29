@@ -114,7 +114,6 @@ export function VillaImportManagementContent({
       setCustomerName("");
       setCustomerNotes("");
       setSpreadsheetUrl("");
-      setZaloLink("");
       setTabMonthPatterns(["tháng {month}/{year}"]);
       setBookedDetectionModes(["cell_color", "price_note"]);
       setBookedCellColors(["#00a651"]);
