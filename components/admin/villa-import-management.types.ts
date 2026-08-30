@@ -41,7 +41,6 @@ export type CreateOwnerModalProps = {
   customerName: string;
   customerNotes: string;
   spreadsheetUrl: string;
-  zaloLink: string;
   tabMonthPatterns: string[];
   pricePatterns: PricePatternConfig[];
   bookedDetectionModes: string[];
