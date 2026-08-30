@@ -1,11 +1,13 @@
+name: ${COMPOSE_PROJECT_NAME:-villa-admin-prod}
+
 services:
   next-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nextjs-prod
     restart: always
     ports:
-      - "4000:4000"
+      - "${HOST_PORT:-4000}:${PORT:-4000}"
     environment:
       - NODE_ENV=production
+      - PORT=${PORT:-4000}

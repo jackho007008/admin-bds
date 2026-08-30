@@ -34,3 +34,15 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Docker production
+
+Để chạy song song app cũ và app mới trên cùng một server:
+
+```bash
+COMPOSE_PROJECT_NAME=bds-admin-v2 HOST_PORT=4100 PORT=4000 docker compose up -d --build
+```
+
+- `COMPOSE_PROJECT_NAME`: tách tên container/network/volume theo từng app deploy.
+- `HOST_PORT`: port public của app trên server.
+- `PORT`: port app chạy bên trong container, thường cứ giữ mặc định `4000`.
