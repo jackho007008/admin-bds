@@ -1,0 +1,3 @@
+villabooking.online, www.villabooking.online {
+    reverse_proxy next-app:4000
+}

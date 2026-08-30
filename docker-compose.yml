@@ -7,7 +7,24 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "${HOST_PORT:-4000}:${PORT:-4000}"
+      - "${HOST_PORT:-4001}:${PORT:-4000}"
     environment:
       - NODE_ENV=production
       - PORT=${PORT:-4000}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - next-app
+
+volumes:
+  caddy_data:
+  caddy_config:
