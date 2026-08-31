@@ -46,9 +46,7 @@ export function VillaImportManagementContent({
     "cell_color",
     "price_note",
   ]);
-  const [bookedCellColors, setBookedCellColors] = useState<string[]>([
-    "#00a651",
-  ]);
+  const [bookedCellColors, setBookedCellColors] = useState<string[]>([]);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
   const [isCreateVillaModalOpen, setIsCreateVillaModalOpen] = useState(false);
   const [editingVilla, setEditingVilla] = useState<Villa | null>(null);
@@ -119,7 +117,7 @@ export function VillaImportManagementContent({
       setSpreadsheetUrl("");
       setTabMonthPatterns(["tháng {month}/{year}"]);
       setBookedDetectionModes(["cell_color", "price_note"]);
-      setBookedCellColors(["#00a651"]);
+      setBookedCellColors([]);
     },
     onError: (error) => {
       toast.error(
@@ -264,7 +262,7 @@ export function VillaImportManagementContent({
       setBookedDetectionModes(
         metadata.bookedDetectionModes || ["cell_color", "price_note"],
       );
-      setBookedCellColors(metadata.bookedCellColors || ["#00a651"]);
+      setBookedCellColors(metadata.bookedCellColors || []);
     } else {
       setSelectedCustomerId("");
       setCustomerName("");
@@ -273,7 +271,7 @@ export function VillaImportManagementContent({
       setTabMonthPatterns(["tháng {month}/{year}"]);
       setPricePatterns([]);
       setBookedDetectionModes(["cell_color", "price_note"]);
-      setBookedCellColors(["#00a651"]);
+      setBookedCellColors([]);
       setIsEditingCustomer(false);
     }
     setIsCreateOwnerModalOpen(true);

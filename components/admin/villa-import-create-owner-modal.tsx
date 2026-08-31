@@ -138,7 +138,7 @@ export function VillaImportCreateOwnerModal({
   };
 
   const handleAddColor = () => {
-    onBookedCellColorsChange([...bookedCellColors, "#00a651"]);
+    onBookedCellColorsChange([...bookedCellColors, "#ffffff"]);
   };
 
   const handleUpdateColor = (index: number, value: string) => {
@@ -384,7 +384,7 @@ export function VillaImportCreateOwnerModal({
                           onChange={(e) =>
                             handleUpdateColor(index, e.target.value)
                           }
-                          placeholder="#00a651"
+                          placeholder="#ffffff"
                           className="h-8 border-0 shadow-none focus-visible:ring-0 px-2"
                         />
                         <Button
