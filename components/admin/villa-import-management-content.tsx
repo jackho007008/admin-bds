@@ -19,6 +19,7 @@ import { VillaImportOwnersSection } from "@/components/admin/villa-import-owners
 import { VillaImportSalesSection } from "@/components/admin/villa-import-sales-section";
 import { VillaImportVillasSection } from "@/components/admin/villa-import-villas-section";
 import { VillaImportCreateSaleModal } from "@/components/admin/villa-import-create-sale-modal";
+import { VillaSpecialMonthsModal } from "@/components/admin/villa-import-special-months-modal";
 import { villaImportService } from "@/services/villaImportService";
 import type {
   Customer,
@@ -56,6 +57,8 @@ export function VillaImportManagementContent({
   const [saleFullName, setSaleFullName] = useState("");
   const [saleEmail, setSaleEmail] = useState("");
   const [salePassword, setSalePassword] = useState("");
+  const [villaToConfigSpecialMonths, setVillaToConfigSpecialMonths] =
+    useState<Villa | null>(null);
 
   const isOwnersMode = mode === "owners";
   const isSalesMode = mode === "sales";
@@ -155,6 +158,26 @@ export function VillaImportManagementContent({
     },
     onError: () => {
       toast.error("Xoá villa thất bại");
+    },
+  });
+
+  const updateVillaMetadataMutation = useMutation({
+    mutationFn: ({
+      villaId,
+      metadata,
+    }: {
+      villaId: string;
+      metadata: Record<string, any>;
+    }) => villaImportService.updateVilla(villaId, { metadata }),
+    onSuccess: () => {
+      toast.success("Cập nhật cấu hình thành công");
+      setVillaToConfigSpecialMonths(null);
+      void queryClient.invalidateQueries({
+        queryKey: ["customerVillas", effectiveSelectedCustomerId],
+      });
+    },
+    onError: () => {
+      toast.error("Cập nhật cấu hình thất bại");
     },
   });
 
@@ -302,6 +325,9 @@ export function VillaImportManagementContent({
                 getVillaDetailMutation.mutate(villa.id);
               }}
               onDeleteVilla={(villa) => deleteVillaMutation.mutate(villa.id)}
+              onOpenConfigSpecialMonths={(villa) =>
+                setVillaToConfigSpecialMonths(villa)
+              }
               onRefreshVillas={() => {
                 void queryClient.invalidateQueries({
                   queryKey: ["villaImportCustomers"],
@@ -386,6 +412,30 @@ export function VillaImportManagementContent({
           onClose={() => setIsCreateSaleModalOpen(false)}
         />
       ) : null}
+
+      {villaToConfigSpecialMonths && (
+        <VillaSpecialMonthsModal
+          isOpen={!!villaToConfigSpecialMonths}
+          villa={villaToConfigSpecialMonths}
+          isSubmitting={updateVillaMetadataMutation.isPending}
+          onOpenChange={(open) => {
+            if (!open) setVillaToConfigSpecialMonths(null);
+          }}
+          onClose={() => setVillaToConfigSpecialMonths(null)}
+          onSave={(villaId, specialMonths) => {
+            const currentMetadata =
+              (villaToConfigSpecialMonths.metadata as Record<string, any>) ||
+              {};
+            updateVillaMetadataMutation.mutate({
+              villaId,
+              metadata: {
+                ...currentMetadata,
+                specialMonths,
+              },
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

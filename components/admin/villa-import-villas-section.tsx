@@ -61,6 +61,7 @@ type VillasSectionProps = {
   onOpenCreateVilla: () => void;
   onOpenEditVilla: (villa: Villa) => void;
   onDeleteVilla: (villa: Villa) => void;
+  onOpenConfigSpecialMonths: (villa: Villa) => void;
   onRefreshVillas: () => void;
 };
 
@@ -135,6 +136,7 @@ export function VillaImportVillasSection({
   onOpenCreateVilla,
   onOpenEditVilla,
   onDeleteVilla,
+  onOpenConfigSpecialMonths,
   onRefreshVillas,
 }: VillasSectionProps) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -398,6 +400,13 @@ export function VillaImportVillasSection({
                             >
                               <Edit className="h-4 w-4" />
                               Chỉnh sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 font-bold text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700"
+                              onClick={() => onOpenConfigSpecialMonths(villa)}
+                            >
+                              <Calendar className="h-4 w-4" />
+                              Cấu hình tháng đặc biệt
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 font-bold text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
