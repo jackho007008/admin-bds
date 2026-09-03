@@ -17,6 +17,7 @@ import type { Villa } from "@/services/villaImportService";
 export type SpecialMonthConfig = {
   monthYear: string;
   priceZone: string;
+  dateZone?: string;
   startDay: number;
 };
 
@@ -42,7 +43,8 @@ export function VillaSpecialMonthsModal({
   useEffect(() => {
     if (isOpen && villa) {
       const metadata = (villa.metadata as Record<string, any>) || {};
-      const savedSpecialMonths = (metadata.specialMonths || []) as SpecialMonthConfig[];
+      const savedSpecialMonths = (metadata.specialMonths ||
+        []) as SpecialMonthConfig[];
       setSpecialMonths(savedSpecialMonths);
     }
   }, [isOpen, villa]);
@@ -63,7 +65,7 @@ export function VillaSpecialMonthsModal({
   const handleChange = (
     index: number,
     field: keyof SpecialMonthConfig,
-    value: string | number
+    value: string | number,
   ) => {
     const newArr = [...specialMonths];
     newArr[index] = { ...newArr[index], [field]: value };
@@ -92,7 +94,8 @@ export function VillaSpecialMonthsModal({
             Cấu hình tháng đặc biệt - {villa?.name}
           </DialogTitle>
           <p className="text-sm text-slate-500 mt-2">
-            Thêm các cấu hình ngoại lệ về vùng giá cho những tháng không khớp với mẫu chung.
+            Thêm các cấu hình ngoại lệ về vùng giá cho những tháng không khớp
+            với mẫu chung.
           </p>
         </DialogHeader>
 
@@ -170,7 +173,7 @@ export function VillaSpecialMonthsModal({
                           handleChange(
                             index,
                             "startDay",
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 0,
                           )
                         }
                         className="h-11 rounded-xl bg-white"

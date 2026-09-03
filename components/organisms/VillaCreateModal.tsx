@@ -247,8 +247,8 @@ export function VillaCreateModal({
 
     if (step === 2) {
       return Boolean(
-        form.priceZone.trim(),
-        form.dateZone.trim(),
+        form.priceZone.trim() &&
+        form.dateZone.trim() &&
         form.googleSheetUrl.trim(),
       );
     }
@@ -296,8 +296,8 @@ export function VillaCreateModal({
       formData.append("districtId", form.districtId);
       formData.append("wardId", form.wardId);
       formData.append("priceZone", form.priceZone.trim());
-    if (form.dateZone.trim())
-      formData.append("dateZone", form.dateZone.trim());
+      if (form.dateZone.trim())
+        formData.append("dateZone", form.dateZone.trim());
 
       const spreadsheetId =
         extractSpreadsheetId(form.googleSheetUrl) || form.googleSheetUrl.trim();
@@ -521,32 +521,32 @@ export function VillaCreateModal({
 
           {currentStep === 2 ? (
             <div className="grid gap-5 md:grid-cols-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-700">
-                      Vùng giá (Bắt buộc) <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={form.priceZone}
-                      onChange={(e) => updateField("priceZone", e.target.value)}
-                      placeholder="VD: C6:C36"
-                      className="bg-slate-50 transition-colors focus:bg-white"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-700">
-                      Vùng ngày (Tuỳ chọn)
-                    </Label>
-                    <Input
-                      value={form.dateZone}
-                      onChange={(e) => updateField("dateZone", e.target.value)}
-                      placeholder="VD: B6:B36"
-                      className="bg-slate-50 transition-colors focus:bg-white"
-                      disabled={isSubmitting}
-                    />
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">
+                    Vùng giá (Bắt buộc) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={form.priceZone}
+                    onChange={(e) => updateField("priceZone", e.target.value)}
+                    placeholder="VD: C6:C36"
+                    className="bg-slate-50 transition-colors focus:bg-white"
+                    disabled={isSubmitting}
+                  />
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">
+                    Vùng ngày (Tuỳ chọn)
+                  </Label>
+                  <Input
+                    value={form.dateZone}
+                    onChange={(e) => updateField("dateZone", e.target.value)}
+                    placeholder="VD: B6:B36"
+                    className="bg-slate-50 transition-colors focus:bg-white"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label>Số phòng ngủ</Label>
                 <Input
