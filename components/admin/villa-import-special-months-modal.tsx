@@ -50,7 +50,7 @@ export function VillaSpecialMonthsModal({
   const handleAdd = () => {
     setSpecialMonths([
       ...specialMonths,
-      { monthYear: "", priceZone: "", startDay: 1 },
+      { monthYear: "", priceZone: "", dateZone: "", startDay: 1 },
     ]);
   };
 
@@ -114,7 +114,7 @@ export function VillaSpecialMonthsModal({
                 return (
                   <div
                     key={index}
-                    className="flex flex-col sm:grid sm:grid-cols-[1fr_1fr_1fr_auto] gap-4 sm:items-end bg-slate-50 p-4 rounded-xl border border-slate-100"
+                    className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
                   >
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -139,6 +139,20 @@ export function VillaSpecialMonthsModal({
                         value={item.priceZone}
                         onChange={(e) =>
                           handleChange(index, "priceZone", e.target.value)
+                        }
+                        className="h-11 rounded-xl bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Vùng ngày
+                      </Label>
+                      <Input
+                        placeholder="B8:B40"
+                        value={item.dateZone || ""}
+                        onChange={(e) =>
+                          handleChange(index, "dateZone", e.target.value)
                         }
                         className="h-11 rounded-xl bg-white"
                       />

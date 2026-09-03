@@ -7,6 +7,13 @@ import type {
 
 export type DetailsTab = "villas" | "rates";
 
+export interface SpecialMonth {
+  monthYear: string; // format: MM/YYYY
+  priceZone: string;
+  dateZone?: string;
+  startDay: number;
+}
+
 export type GroupedVillaRate = {
   villaId: string;
   villaName: string;
@@ -33,6 +40,7 @@ export type SalesSectionProps = {
   sales: SaleAccount[];
   isLoadingSales: boolean;
   onOpenCreateSaleModal: () => void;
+  onOpenEditSaleModal: (sale: SaleAccount) => void;
   onRefreshSales: () => void;
 };
 
@@ -63,12 +71,17 @@ export type CreateSaleModalProps = {
   isOpen: boolean;
   saleFullName: string;
   saleEmail: string;
-  salePassword: string;
+  salePassword?: string;
+  saleIsActive?: boolean;
+  saleExpiresAt?: string;
+  isEditing?: boolean;
   isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSaleFullNameChange: (value: string) => void;
   onSaleEmailChange: (value: string) => void;
   onSalePasswordChange: (value: string) => void;
+  onSaleIsActiveChange?: (value: boolean) => void;
+  onSaleExpiresAtChange?: (value: string) => void;
   onSubmit: () => void;
   onClose: () => void;
 };

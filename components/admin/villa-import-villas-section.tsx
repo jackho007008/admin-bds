@@ -113,7 +113,11 @@ function matchesVillaSearch(villa: Villa, keyword: string) {
 
 function getDisplayPriceZone(villa: Villa) {
   if (villa.priceZone?.trim()) {
-    return villa.priceZone.trim();
+    let text = villa.priceZone.trim();
+    if (villa.dateZone?.trim()) {
+      text += ` (Ngày: ${villa.dateZone.trim()})`;
+    }
+    return text;
   }
 
   const sourceCellRef = villa.sourceCellRef?.trim() || "";

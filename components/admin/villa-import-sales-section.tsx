@@ -60,6 +60,7 @@ export function VillaImportSalesSection({
   sales,
   isLoadingSales,
   onOpenCreateSaleModal,
+  onOpenEditSaleModal,
   onRefreshSales,
 }: SalesSectionProps) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -228,6 +229,11 @@ export function VillaImportSalesSection({
                     <span className="text-[13px] font-medium text-slate-500">
                       {formatDate(sale.createdAt)}
                     </span>
+                    {sale.expiresAt && (
+                      <div className="text-[11px] font-semibold text-red-500 mt-1">
+                        Hạn: {formatDate(sale.expiresAt)}
+                      </div>
+                    )}
                   </TableCell>
 
                   <TableCell className="px-6 py-3 text-right">
@@ -248,7 +254,10 @@ export function VillaImportSalesSection({
                           <DropdownMenuLabel className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                             Quản lý sales
                           </DropdownMenuLabel>
-                          <DropdownMenuItem className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700">
+                          <DropdownMenuItem 
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                            onClick={() => onOpenEditSaleModal(sale)}
+                          >
                             <Edit className="h-4 w-4" />
                             Chỉnh sửa profile
                           </DropdownMenuItem>

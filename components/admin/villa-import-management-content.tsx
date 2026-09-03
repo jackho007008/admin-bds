@@ -52,9 +52,12 @@ export function VillaImportManagementContent({
   const [editingVilla, setEditingVilla] = useState<Villa | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [isCreateSaleModalOpen, setIsCreateSaleModalOpen] = useState(false);
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
   const [saleFullName, setSaleFullName] = useState("");
   const [saleEmail, setSaleEmail] = useState("");
   const [salePassword, setSalePassword] = useState("");
+  const [saleIsActive, setSaleIsActive] = useState(true);
+  const [saleExpiresAt, setSaleExpiresAt] = useState("");
   const [villaToConfigSpecialMonths, setVillaToConfigSpecialMonths] =
     useState<Villa | null>(null);
 
@@ -99,6 +102,27 @@ export function VillaImportManagementContent({
       toast.error("Tạo sale thất bại");
     },
   });
+
+  const updateSaleMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      villaImportService.updateSale(id, data),
+    onSuccess: () => {
+      toast.success("Đã cập nhật sale");
+      setEditingSaleId(null);
+      setSaleFullName("");
+      setSaleEmail("");
+      setSalePassword("");
+      setSaleExpiresAt("");
+      setSaleIsActive(true);
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportSales"],
+      });
+    },
+    onError: () => {
+      toast.error("Cập nhật sale thất bại");
+    },
+  });
+
   const createCustomerMutation = useMutation({
     mutationFn: (data: { name: string; notes?: string; metadata?: any }) =>
       isEditingCustomer && selectedCustomerId
@@ -216,6 +240,16 @@ export function VillaImportManagementContent({
     (item) => item.id === effectiveSelectedCustomerId,
   );
 
+  const openEditSaleModal = (sale: SaleAccount) => {
+    setEditingSaleId(sale.id);
+    setSaleFullName(sale.fullName);
+    setSaleEmail(sale.email);
+    setSalePassword(""); // Reset password
+    setSaleIsActive(sale.isActive);
+    setSaleExpiresAt(sale.expiresAt || "");
+    setIsCreateSaleModalOpen(true);
+  };
+
   const handleCreateSale = () => {
     if (!saleFullName.trim()) {
       toast.error("Nhập tên sale trước");
@@ -227,23 +261,44 @@ export function VillaImportManagementContent({
       return;
     }
 
-    if (!salePassword.trim()) {
+    if (!editingSaleId && !salePassword.trim()) {
       toast.error("Nhập mật khẩu sale");
       return;
     }
 
-    createSaleMutation.mutate(
-      {
-        fullName: saleFullName.trim(),
-        email: saleEmail.trim(),
-        password: salePassword,
-      },
-      {
-        onSuccess: () => {
-          setIsCreateSaleModalOpen(false);
+    if (editingSaleId) {
+      updateSaleMutation.mutate(
+        {
+          id: editingSaleId,
+          data: {
+            fullName: saleFullName.trim(),
+            email: saleEmail.trim(),
+            ...(salePassword.trim() ? { password: salePassword } : {}),
+            isActive: saleIsActive,
+            ...(saleExpiresAt.trim() ? { expiresAt: saleExpiresAt } : { expiresAt: null }),
+          },
         },
-      },
-    );
+        {
+          onSuccess: () => {
+            setIsCreateSaleModalOpen(false);
+          },
+        },
+      );
+    } else {
+      createSaleMutation.mutate(
+        {
+          fullName: saleFullName.trim(),
+          email: saleEmail.trim(),
+          password: salePassword,
+          ...(saleExpiresAt.trim() ? { expiresAt: saleExpiresAt } : {}),
+        },
+        {
+          onSuccess: () => {
+            setIsCreateSaleModalOpen(false);
+          },
+        },
+      );
+    }
   };
 
   const openCreateOwnerModal = (customer?: Customer) => {
@@ -343,7 +398,16 @@ export function VillaImportManagementContent({
             <VillaImportSalesSection
               sales={sales}
               isLoadingSales={isLoadingSales}
-              onOpenCreateSaleModal={() => setIsCreateSaleModalOpen(true)}
+              onOpenCreateSaleModal={() => {
+                setEditingSaleId(null);
+                setSaleFullName("");
+                setSaleEmail("");
+                setSalePassword("");
+                setSaleIsActive(true);
+                setSaleExpiresAt("");
+                setIsCreateSaleModalOpen(true);
+              }}
+              onOpenEditSaleModal={openEditSaleModal}
               onRefreshSales={() => {
                 void queryClient.invalidateQueries({
                   queryKey: ["villaImportSales"],
@@ -401,11 +465,16 @@ export function VillaImportManagementContent({
           saleFullName={saleFullName}
           saleEmail={saleEmail}
           salePassword={salePassword}
-          isSubmitting={createSaleMutation.isPending}
+          saleIsActive={saleIsActive}
+          saleExpiresAt={saleExpiresAt}
+          isEditing={!!editingSaleId}
+          isSubmitting={editingSaleId ? updateSaleMutation.isPending : createSaleMutation.isPending}
           onOpenChange={setIsCreateSaleModalOpen}
           onSaleFullNameChange={setSaleFullName}
           onSaleEmailChange={setSaleEmail}
           onSalePasswordChange={setSalePassword}
+          onSaleIsActiveChange={setSaleIsActive}
+          onSaleExpiresAtChange={setSaleExpiresAt}
           onSubmit={handleCreateSale}
           onClose={() => setIsCreateSaleModalOpen(false)}
         />

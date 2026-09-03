@@ -35,6 +35,7 @@ export interface SaleAccount {
   email: string;
   role: string;
   isActive: boolean;
+  expiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +46,7 @@ export interface Villa {
   name: string;
   normalizedName: string;
   priceZone?: string | null;
+  dateZone?: string;
   description?: string | null;
   floors?: number | null;
   bedrooms?: number | null;
@@ -256,12 +258,30 @@ export const villaImportService = {
     fullName: string;
     email: string;
     password?: string;
+    expiresAt?: string;
   }): Promise<SaleAccount> => {
     const response = await axiosInstance.post<SaleAccount>(
       "/users/admin/sales",
       data,
     );
     return response.data;
+  },
+
+  updateSale: async (
+    id: string,
+    data: {
+      fullName?: string;
+      email?: string;
+      password?: string;
+      isActive?: boolean;
+      expiresAt?: string;
+    },
+  ): Promise<SaleAccount> => {
+    const response = await axiosInstance.patch<{ data: SaleAccount }>(
+      `/users/admin/${id}`,
+      data,
+    );
+    return response.data.data;
   },
 
   listSales: async (): Promise<SaleAccount[]> => {
