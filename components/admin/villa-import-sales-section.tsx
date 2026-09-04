@@ -33,6 +33,7 @@ import {
   ShieldCheck,
   UserPlus,
   Users,
+  Trash2,
 } from "lucide-react";
 
 function getSaleInitial(name: string) {
@@ -61,6 +62,7 @@ export function VillaImportSalesSection({
   isLoadingSales,
   onOpenCreateSaleModal,
   onOpenEditSaleModal,
+  onDeleteSale,
   onRefreshSales,
 }: SalesSectionProps) {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -260,6 +262,17 @@ export function VillaImportSalesSection({
                           >
                             <Edit className="h-4 w-4" />
                             Chỉnh sửa profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 font-bold text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm("Bạn có chắc chắn muốn xoá tài khoản sales này?")) {
+                                onDeleteSale(sale.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Xóa tài khoản
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuContent>

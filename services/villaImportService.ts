@@ -267,6 +267,10 @@ export const villaImportService = {
     return response.data;
   },
 
+  deleteSale: async (id: string): Promise<void> => {
+    await axiosInstance.patch(`/users/admin/${id}/soft-delete`);
+  },
+
   updateSale: async (
     id: string,
     data: {
@@ -285,9 +289,8 @@ export const villaImportService = {
   },
 
   listSales: async (): Promise<SaleAccount[]> => {
-    const response = await axiosInstance.get<SaleAccount[]>(
-      "/users/admin/sales",
-    );
+    const response =
+      await axiosInstance.get<SaleAccount[]>("/users/admin/sales");
     return response.data;
   },
 

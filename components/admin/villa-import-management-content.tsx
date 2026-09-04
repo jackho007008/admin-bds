@@ -108,18 +108,30 @@ export function VillaImportManagementContent({
       villaImportService.updateSale(id, data),
     onSuccess: () => {
       toast.success("Đã cập nhật sale");
-      setEditingSaleId(null);
-      setSaleFullName("");
-      setSaleEmail("");
-      setSalePassword("");
-      setSaleExpiresAt("");
-      setSaleIsActive(true);
+      void queryClient.invalidateQueries({
+        queryKey: ["villaImportSales"],
+      });
+      setIsCreateSaleModalOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || "Có lỗi xảy ra khi cập nhật sale",
+      );
+    },
+  });
+
+  const deleteSaleMutation = useMutation({
+    mutationFn: villaImportService.deleteSale,
+    onSuccess: () => {
+      toast.success("Xoá tài khoản sales thành công");
       void queryClient.invalidateQueries({
         queryKey: ["villaImportSales"],
       });
     },
-    onError: () => {
-      toast.error("Cập nhật sale thất bại");
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || "Có lỗi xảy ra khi xoá tài khoản",
+      );
     },
   });
 
@@ -275,7 +287,9 @@ export function VillaImportManagementContent({
             email: saleEmail.trim(),
             ...(salePassword.trim() ? { password: salePassword } : {}),
             isActive: saleIsActive,
-            ...(saleExpiresAt.trim() ? { expiresAt: saleExpiresAt } : { expiresAt: null }),
+            ...(saleExpiresAt.trim()
+              ? { expiresAt: saleExpiresAt }
+              : { expiresAt: null }),
           },
         },
         {
@@ -408,6 +422,7 @@ export function VillaImportManagementContent({
                 setIsCreateSaleModalOpen(true);
               }}
               onOpenEditSaleModal={openEditSaleModal}
+              onDeleteSale={(saleId) => deleteSaleMutation.mutate(saleId)}
               onRefreshSales={() => {
                 void queryClient.invalidateQueries({
                   queryKey: ["villaImportSales"],
@@ -468,7 +483,11 @@ export function VillaImportManagementContent({
           saleIsActive={saleIsActive}
           saleExpiresAt={saleExpiresAt}
           isEditing={!!editingSaleId}
-          isSubmitting={editingSaleId ? updateSaleMutation.isPending : createSaleMutation.isPending}
+          isSubmitting={
+            editingSaleId
+              ? updateSaleMutation.isPending
+              : createSaleMutation.isPending
+          }
           onOpenChange={setIsCreateSaleModalOpen}
           onSaleFullNameChange={setSaleFullName}
           onSaleEmailChange={setSaleEmail}

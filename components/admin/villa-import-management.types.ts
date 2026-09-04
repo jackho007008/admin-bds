@@ -41,6 +41,7 @@ export type SalesSectionProps = {
   isLoadingSales: boolean;
   onOpenCreateSaleModal: () => void;
   onOpenEditSaleModal: (sale: SaleAccount) => void;
+  onDeleteSale: (saleId: string) => void;
   onRefreshSales: () => void;
 };
 
