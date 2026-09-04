@@ -237,20 +237,12 @@ export function VillaCreateModal({
   const validateStep = (step: number) => {
     if (step === 1) {
       return Boolean(
-        form.name.trim() &&
-        form.provinceId &&
-        form.districtId &&
-        form.wardId &&
-        form.actualAddress.trim(),
+        form.name.trim() && form.provinceId && form.districtId && form.wardId,
       );
     }
 
     if (step === 2) {
-      return Boolean(
-        form.priceZone.trim() &&
-        form.dateZone.trim() &&
-        form.googleSheetUrl.trim(),
-      );
+      return Boolean(form.priceZone.trim());
     }
 
     return true;
