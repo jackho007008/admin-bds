@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { MapPin, Building2, LogOut, Users, ShieldCheck, X, House } from "lucide-react";
+import { MapPin, Building2, LogOut, Users, ShieldCheck, X, House, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { appTheme } from "@/lib/theme";
 
@@ -11,6 +11,7 @@ const adminMenuItems = [
   { icon: Users, label: "Quản lý sheet", href: "/admin/villa-owners" },
   { icon: House, label: "Quản lý villa", href: "/admin/villas" },
   { icon: ShieldCheck, label: "Quản lý sales", href: "/admin/sales" },
+  { icon: UserCheck, label: "Thành viên chờ duyệt", href: "/admin/pending-users" },
 ];
 
 interface SidebarProps {
