@@ -25,6 +25,7 @@ export type GroupedVillaRate = {
 export type PricePatternConfig = {
   pattern: string;
   multiplier: number;
+  multiplier2?: number;
 };
 
 export type OwnersSectionProps = {

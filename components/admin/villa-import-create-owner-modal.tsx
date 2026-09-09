@@ -118,13 +118,25 @@ export function VillaImportCreateOwnerModal({
     onTabMonthPatternsChange(newPatterns);
   };
 
+  const formatNumberDots = (val?: number | string) => {
+    if (val === undefined || val === null || val === "") return "";
+    const num = typeof val === "number" ? val : Number(String(val).replace(/\./g, "").replace(/[^\d]/g, ""));
+    if (isNaN(num) || num === 0) return "";
+    return num.toLocaleString("vi-VN");
+  };
+
+  const parseNumberDots = (val: string): number | undefined => {
+    const clean = val.replace(/\./g, "").replace(/[^\d]/g, "");
+    return clean ? Number(clean) : undefined;
+  };
+
   const handleAddPricePattern = () => {
-    onPricePatternsChange([...pricePatterns, { pattern: "", multiplier: 1 }]);
+    onPricePatternsChange([...pricePatterns, { pattern: "", multiplier: 1000000 }]);
   };
 
   const handleUpdatePricePattern = (
     index: number,
-    field: "pattern" | "multiplier",
+    field: "pattern" | "multiplier" | "multiplier2",
     value: any,
   ) => {
     const newPatterns = [...pricePatterns];
@@ -221,12 +233,15 @@ export function VillaImportCreateOwnerModal({
               <div className="space-y-2">
                 {pricePatterns && pricePatterns.length > 0 && (
                   <div className="flex items-center gap-2 mb-1 px-1">
-                    <div className="grid grid-cols-2 gap-2 flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                       <span className="text-xs text-muted-foreground font-medium">
-                        Mẫu giá
+                        Mẫu giá (VD: {"{price}cheo{price2}"})
                       </span>
                       <span className="text-xs text-muted-foreground font-medium">
-                        Hệ số nhân
+                        Hệ số {"{price}"}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Hệ số {"{price2}"} (Tùy chọn)
                       </span>
                     </div>
                     <div className="w-10"></div>
@@ -234,7 +249,7 @@ export function VillaImportCreateOwnerModal({
                 )}
                 {pricePatterns?.map((pattern, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <div className="grid grid-cols-2 gap-2 flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                       <Input
                         value={pattern.pattern}
                         onChange={(e) =>
@@ -244,19 +259,31 @@ export function VillaImportCreateOwnerModal({
                             e.target.value,
                           )
                         }
-                        placeholder="Mẫu (VD: {price}tr)"
+                        placeholder="VD: {price}cheo{price2}"
                       />
                       <Input
-                        type="number"
-                        value={pattern.multiplier}
+                        type="text"
+                        value={formatNumberDots(pattern.multiplier)}
                         onChange={(e) =>
                           handleUpdatePricePattern(
                             index,
                             "multiplier",
-                            Number(e.target.value),
+                            parseNumberDots(e.target.value) || 0,
                           )
                         }
-                        placeholder="Hệ số (VD: 1000000)"
+                        placeholder="Hệ số {price} (VD: 1.000.000)"
+                      />
+                      <Input
+                        type="text"
+                        value={formatNumberDots(pattern.multiplier2)}
+                        onChange={(e) =>
+                          handleUpdatePricePattern(
+                            index,
+                            "multiplier2",
+                            parseNumberDots(e.target.value),
+                          )
+                        }
+                        placeholder="Hệ số {price2} (VD: 100.000)"
                       />
                     </div>
                     <Button
@@ -270,6 +297,9 @@ export function VillaImportCreateOwnerModal({
                     </Button>
                   </div>
                 ))}
+                <p className="text-[11px] text-slate-500 mt-1">
+                  💡 Hỗ trợ biến: <code>{"{price}"}</code> (phần nguyên) và <code>{"{price2}"}</code> (phần lẻ). Ví dụ mẫu <code>{"{price}cheo{price2}"}</code> với giá <code>4cheo5</code> sẽ tính: 4 x 1.000.000 + 5 x 100.000 = 4.500.000 đ. (Hệ số 2 để trống hệ thống sẽ tự quy đổi chuẩn).
+                </p>
                 <div className="flex justify-end">
                   <Button
                     type="button"
