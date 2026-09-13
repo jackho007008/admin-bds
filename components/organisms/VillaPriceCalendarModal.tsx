@@ -27,6 +27,7 @@ import {
   ChevronRight,
   Loader2,
   Calendar as CalendarIcon,
+  RefreshCw,
 } from "lucide-react";
 import { villaImportService } from "@/services/villaImportService";
 import { Villa, VillaDailyRate } from "@/services/villaImportService";
@@ -45,11 +46,38 @@ export function VillaPriceCalendarModal({
 }: VillaPriceCalendarModalProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const { data: rates, isLoading } = useQuery({
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const {
+    data: rates,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["villaRates", villa?.id],
     queryFn: () => (villa ? villaImportService.listVillaRates(villa.id) : []),
     enabled: !!villa && isOpen,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
   });
+
+  const handleManualSync = async () => {
+    if (!villa) return;
+    setIsSyncing(true);
+    try {
+      if (villa.customerId) {
+        await villaImportService.importAllConfiguredMonths({
+          customerId: villa.customerId,
+          villaId: villa.id,
+        });
+      }
+      await refetch();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -117,7 +145,22 @@ export function VillaPriceCalendarModal({
               <h2 className="text-lg font-semibold text-slate-800 capitalize">
                 {format(currentDate, dateFormat, { locale: vi })}
               </h2>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualSync}
+                  disabled={isSyncing || isLoading}
+                  className="h-9 rounded-xl gap-2 text-xs font-medium text-slate-700 hover:text-indigo-600 border-slate-200"
+                >
+                  <RefreshCw
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      (isSyncing || isLoading) && "animate-spin",
+                    )}
+                  />
+                  Đồng bộ mới nhất
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"

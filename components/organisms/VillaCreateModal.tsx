@@ -344,6 +344,9 @@ export function VillaCreateModal({
       void queryClient.invalidateQueries({
         queryKey: ["customerRates", customerId],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ["villaRates"],
+      });
       onClose();
     } catch (error) {
       console.error(error);
