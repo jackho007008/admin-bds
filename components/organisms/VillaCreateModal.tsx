@@ -288,8 +288,7 @@ export function VillaCreateModal({
       formData.append("districtId", form.districtId);
       formData.append("wardId", form.wardId);
       formData.append("priceZone", form.priceZone.trim());
-      if (form.dateZone.trim())
-        formData.append("dateZone", form.dateZone.trim());
+      formData.append("dateZone", form.dateZone.trim());
 
       const spreadsheetId =
         extractSpreadsheetId(form.googleSheetUrl) || form.googleSheetUrl.trim();
