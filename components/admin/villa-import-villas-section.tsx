@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -12,12 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -39,6 +33,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { Customer, Villa } from "@/services/villaImportService";
 import {
+  Check,
+  ChevronDown,
   Edit,
   Home,
   MoreHorizontal,
@@ -48,6 +44,7 @@ import {
   Sheet,
   Trash2,
   Calendar,
+  X,
 } from "lucide-react";
 import { VillaPriceCalendarModal } from "../organisms/VillaPriceCalendarModal";
 
@@ -64,6 +61,126 @@ type VillasSectionProps = {
   onOpenConfigSpecialMonths: (villa: Villa) => void;
   onRefreshVillas: () => void;
 };
+
+function SearchableSheetSelect({
+  customers,
+  selectedCustomerId,
+  isLoadingCustomers,
+  onSelectCustomer,
+}: {
+  customers: Customer[];
+  selectedCustomerId: string;
+  isLoadingCustomers: boolean;
+  onSelectCustomer: (customerId: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+
+  const filteredCustomers = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return customers;
+    return customers.filter((c) => c.name.toLowerCase().includes(keyword));
+  }, [customers, search]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex h-12 w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 text-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Sheet className="h-4 w-4 shrink-0 text-emerald-600" />
+          <span
+            className={
+              selectedCustomer
+                ? "truncate font-medium text-slate-900"
+                : "truncate text-slate-400"
+            }
+          >
+            {selectedCustomer?.name ||
+              (isLoadingCustomers ? "Đang tải sheet..." : "Chọn sheet")}
+          </span>
+        </div>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[300px] rounded-2xl border border-slate-100 bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in-0 zoom-in-95">
+          <div className="relative mb-2">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm theo tên sheet..."
+              className="h-10 rounded-xl pl-9 pr-8 text-sm border-slate-200 focus-visible:ring-emerald-500/20"
+              autoFocus
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-64 overflow-y-auto space-y-1 p-1">
+            {filteredCustomers.length === 0 ? (
+              <div className="p-3 text-center text-xs text-slate-400">
+                Không tìm thấy sheet nào
+              </div>
+            ) : (
+              filteredCustomers.map((customer) => {
+                const isSelected = selectedCustomerId === customer.id;
+                return (
+                  <button
+                    key={customer.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectCustomer(customer.id);
+                      setIsOpen(false);
+                      setSearch("");
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                      isSelected
+                        ? "bg-emerald-50 font-medium text-emerald-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    )}
+                  >
+                    <span className="truncate">{customer.name}</span>
+                    {isSelected && (
+                      <Check className="ml-2 h-4 w-4 shrink-0 text-emerald-600" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getVillaInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "V";
@@ -199,35 +316,12 @@ export function VillaImportVillasSection({
       <div className="rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-sm">
         <div className="grid gap-3 lg:grid-cols-[360px_minmax(0,1fr)_auto]">
           <div>
-            <Select
-              value={selectedCustomerId}
-              onValueChange={(value) => {
-                if (value) {
-                  onSelectCustomer(value);
-                }
-              }}
-            >
-              <SelectTrigger className="h-12 w-full rounded-2xl px-4">
-                <div className="flex min-w-0 items-center gap-2">
-                  <Sheet className="h-4 w-4 shrink-0 text-emerald-600" />
-                  <span
-                    className={
-                      selectedCustomer ? "truncate" : "truncate text-slate-400"
-                    }
-                  >
-                    {selectedCustomer?.name ||
-                      (isLoadingCustomers ? "Đang tải sheet..." : "Chọn sheet")}
-                  </span>
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSheetSelect
+              customers={customers}
+              selectedCustomerId={selectedCustomerId}
+              isLoadingCustomers={isLoadingCustomers}
+              onSelectCustomer={onSelectCustomer}
+            />
           </div>
 
           <div className="relative">
