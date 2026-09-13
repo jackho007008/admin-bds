@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
+import { VietnameseMonthPicker } from "./vietnamese-month-picker";
 import type { Villa } from "@/services/villaImportService";
 
 export type SpecialMonthConfig = {
@@ -123,13 +124,11 @@ export function VillaSpecialMonthsModal({
                       <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Tháng / Năm
                       </Label>
-                      <Input
-                        type="month"
-                        value={monthInputValue}
-                        onChange={(e) =>
-                          handleChange(index, "monthYear", e.target.value)
+                      <VietnameseMonthPicker
+                        value={item.monthYear}
+                        onChange={(val) =>
+                          handleChange(index, "monthYear", val)
                         }
-                        className="h-11 rounded-xl bg-white"
                       />
                     </div>
 
