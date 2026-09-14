@@ -1,6 +1,17 @@
 "use client";
 
-import { Loader2, Users, X, Plus } from "lucide-react";
+import {
+  Loader2,
+  FileSpreadsheet,
+  X,
+  Plus,
+  Trash2,
+  Sparkles,
+  CheckCircle2,
+  Calendar,
+  DollarSign,
+  Link2,
+} from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
 import type { CreateOwnerModalProps } from "@/components/admin/villa-import-management.types";
-import { toast } from "sonner";
-import { villaImportService } from "@/services/villaImportService";
 
 export function VillaImportCreateOwnerModal({
   isOpen,
@@ -35,7 +43,6 @@ export function VillaImportCreateOwnerModal({
   tabMonthPatterns,
   pricePatterns,
   bookedDetectionModes,
-  bookedCellColors,
   onOpenChange,
   onCustomerNameChange,
   onCustomerNotesChange,
@@ -43,65 +50,9 @@ export function VillaImportCreateOwnerModal({
   onTabMonthPatternsChange,
   onPricePatternsChange,
   onBookedDetectionModesChange,
-  onBookedCellColorsChange,
   onSubmit,
   onClose,
 }: CreateOwnerModalProps) {
-  const [isFetchingColor, setIsFetchingColor] = useState(false);
-  const [suggestedColors, setSuggestedColors] = useState<string[]>([]);
-
-  const handleFetchColor = async () => {
-    if (!spreadsheetUrl) {
-      toast.error("Vui lòng nhập Link Google Sheet trước khi lấy màu");
-      return;
-    }
-
-    try {
-      setIsFetchingColor(true);
-      const extractedSpreadsheetId =
-        spreadsheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)?.[1] ||
-        spreadsheetUrl;
-      const extractedGid = spreadsheetUrl.match(/[#&]gid=([0-9]+)/)?.[1] || "0";
-
-      const res = await villaImportService.fetchGoogleSheetColors({
-        spreadsheetId: extractedSpreadsheetId,
-        gid: extractedGid,
-      });
-
-      if (res.colors && res.colors.length > 0) {
-        // Lọc màu trắng (thường là màu nền mặc định #ffffff) và màu đen (#000000)
-        const usefulColors = res.colors
-          .filter(
-            (c) =>
-              c.hex.toLowerCase() !== "#ffffff" &&
-              c.hex.toLowerCase() !== "#000000" &&
-              c.hex.toLowerCase() !== "#fff",
-          )
-          .map((c) => c.hex);
-
-        if (usefulColors.length > 0) {
-          const uniqueColors = Array.from(new Set(usefulColors));
-          setSuggestedColors(uniqueColors);
-          toast.success(
-            `Đã tìm thấy ${uniqueColors.length} màu trong file! Vui lòng chọn bên dưới.`,
-          );
-        } else {
-          setSuggestedColors([]);
-          toast.info("File không có ô nào tô màu (ngoài trắng/đen)");
-        }
-      } else {
-        toast.info("Không tìm thấy màu nền nào trong file");
-      }
-    } catch (error: any) {
-      console.error(error);
-      toast.error(
-        error?.response?.data?.message || "Lỗi khi lấy màu từ Google Sheet",
-      );
-    } finally {
-      setIsFetchingColor(false);
-    }
-  };
-
   const handleAddTabPattern = () => {
     onTabMonthPatternsChange([...tabMonthPatterns, ""]);
   };
@@ -120,7 +71,10 @@ export function VillaImportCreateOwnerModal({
 
   const formatNumberDots = (val?: number | string) => {
     if (val === undefined || val === null || val === "") return "";
-    const num = typeof val === "number" ? val : Number(String(val).replace(/\./g, "").replace(/[^\d]/g, ""));
+    const num =
+      typeof val === "number"
+        ? val
+        : Number(String(val).replace(/\./g, "").replace(/[^\d]/g, ""));
     if (isNaN(num) || num === 0) return "";
     return num.toLocaleString("vi-VN");
   };
@@ -131,7 +85,10 @@ export function VillaImportCreateOwnerModal({
   };
 
   const handleAddPricePattern = () => {
-    onPricePatternsChange([...pricePatterns, { pattern: "", multiplier: 1000000 }]);
+    onPricePatternsChange([
+      ...pricePatterns,
+      { pattern: "", multiplier: 1000000 },
+    ]);
   };
 
   const handleUpdatePricePattern = (
@@ -149,107 +106,137 @@ export function VillaImportCreateOwnerModal({
     onPricePatternsChange(newPatterns);
   };
 
-  const handleAddColor = () => {
-    onBookedCellColorsChange([...bookedCellColors, "#ffffff"]);
-  };
-
-  const handleUpdateColor = (index: number, value: string) => {
-    const newColors = [...bookedCellColors];
-    newColors[index] = value;
-    onBookedCellColorsChange(newColors);
-  };
-
-  const handleRemoveColor = (index: number) => {
-    const newColors = bookedCellColors.filter((_, i) => i !== index);
-    onBookedCellColorsChange(newColors);
-  };
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <AppModalContent className="sm:max-w-2xl">
-        <AppModalHeader>
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
-            <Users className="h-4 w-4" />
-            {isEditing ? "Cập nhật sheet" : "Tạo mới sheet"}
+      <AppModalContent className="sm:max-w-2xl border border-slate-200 shadow-xl rounded-2xl overflow-hidden bg-white">
+        {/* Header */}
+        <AppModalHeader className="bg-slate-50/80 border-b border-slate-100 px-6 py-5">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              {isEditing ? "Cấu hình Google Sheet" : "Tạo mới kết nối Sheet"}
+            </span>
           </div>
-          <AppModalTitle className="pt-3">
-            {isEditing ? "Cập nhật sheet" : "Tạo sheet"}
+          <AppModalTitle className="pt-2 text-xl font-bold text-slate-900 tracking-tight leading-snug">
+            {isEditing ? "Cập nhật sheet" : "Tạo sheet mới"}
           </AppModalTitle>
+          <p className="text-sm text-slate-500 mt-1 font-normal leading-relaxed">
+            Thiết lập thông tin định dạng và quy tắc tự động đồng bộ dữ liệu từ
+            Google Sheet
+          </p>
         </AppModalHeader>
 
-        <AppModalBody className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="customerName">Tên sheet</Label>
-              <Input
-                id="customerName"
-                value={customerName}
-                onChange={(e) => onCustomerNameChange(e.target.value)}
-                placeholder="Ví dụ: Hạnh Hạnh"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Cấu hình tab tháng</Label>
+        {/* Form Body */}
+        <AppModalBody className="space-y-6 px-6 py-6 max-h-[72vh] overflow-y-auto">
+          {/* Card 1: Thông tin cơ bản */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4 space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                {tabMonthPatterns.map((pattern, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      value={pattern}
-                      onChange={(e) =>
-                        handleUpdateTabPattern(index, e.target.value)
-                      }
-                      placeholder="tháng {month}/{year}"
-                    />
+                <Label
+                  htmlFor="customerName"
+                  className="text-sm font-semibold text-slate-800 flex items-center gap-1.5"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-slate-500" />
+                  Tên sheet
+                </Label>
+                <Input
+                  id="customerName"
+                  value={customerName}
+                  onChange={(e) => onCustomerNameChange(e.target.value)}
+                  placeholder="Ví dụ: Hub Villa"
+                  className="bg-white rounded-xl border-slate-200 focus-visible:ring-emerald-500 text-sm text-slate-800 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  Cấu hình tab tháng
+                </Label>
+                <div className="space-y-2">
+                  {tabMonthPatterns.map((pattern, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={pattern}
+                        onChange={(e) =>
+                          handleUpdateTabPattern(index, e.target.value)
+                        }
+                        placeholder="tháng {month}/{year}"
+                        className="bg-white rounded-xl border-slate-200 focus-visible:ring-emerald-500 text-sm text-slate-800 placeholder:text-slate-400"
+                      />
+                      {tabMonthPatterns.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                          onClick={() => handleRemoveTabPattern(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex justify-end">
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 h-10 w-10 text-slate-400 hover:text-red-500"
-                      onClick={() => handleRemoveTabPattern(index)}
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddTabPattern}
+                      className="rounded-xl border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                     >
-                      <X className="h-4 w-4" />
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Thêm mẫu tab
                     </Button>
                   </div>
-                ))}
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddTabPattern}
-                    className="rounded-xl"
-                  >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Thêm
-                  </Button>
                 </div>
               </div>
             </div>
+
+            {/* Link Google Sheet */}
+            <div className="space-y-2 pt-2 border-t border-slate-200/60">
+              <Label
+                htmlFor="spreadsheetUrl"
+                className="text-sm font-semibold text-slate-800 flex items-center gap-1.5"
+              >
+                <Link2 className="h-4 w-4 text-slate-500" />
+                Link Google Sheet
+              </Label>
+              <Input
+                id="spreadsheetUrl"
+                value={spreadsheetUrl}
+                onChange={(e) => onSpreadsheetUrlChange(e.target.value)}
+                placeholder="https://docs.google.com/spreadsheets/d/..."
+                className="bg-white rounded-xl border-slate-200 focus-visible:ring-emerald-500 text-sm text-slate-800 font-normal placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          {/* Card 2: Cấu hình cấu trúc giá */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                <DollarSign className="h-4 w-4 text-slate-500" />
+                Cấu hình cấu trúc giá
+              </Label>
+            </div>
+
             <div className="space-y-2">
-              <Label>Cấu hình cấu trúc giá</Label>
-              <div className="space-y-2">
-                {pricePatterns && pricePatterns.length > 0 && (
-                  <div className="flex items-center gap-2 mb-1 px-1">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
-                      <span className="text-xs text-muted-foreground font-medium">
-                        Mẫu giá (VD: {"{price}cheo{price2}"})
-                      </span>
-                      <span className="text-xs text-muted-foreground font-medium">
-                        Hệ số {"{price}"}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-medium">
-                        Hệ số {"{price2}"} (Tùy chọn)
-                      </span>
-                    </div>
-                    <div className="w-10"></div>
+              {pricePatterns && pricePatterns.length > 0 && (
+                <div className="hidden md:grid grid-cols-12 gap-2 px-1 text-xs font-medium text-slate-500">
+                  <div className="col-span-5">Mẫu giá trong ô</div>
+                  <div className="col-span-3">
+                    Hệ số phần nguyên {"{price}"}
                   </div>
-                )}
-                {pricePatterns?.map((pattern, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
+                  <div className="col-span-3">Hệ số phần lẻ {"{price2}"}</div>
+                  <div className="col-span-1"></div>
+                </div>
+              )}
+
+              {pricePatterns?.map((pattern, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-11 gap-2 flex-1">
+                    <div className="md:col-span-5">
                       <Input
                         value={pattern.pattern}
                         onChange={(e) =>
@@ -260,7 +247,10 @@ export function VillaImportCreateOwnerModal({
                           )
                         }
                         placeholder="VD: {price}cheo{price2}"
+                        className="bg-white rounded-xl border-slate-200 text-sm text-slate-800 focus-visible:ring-emerald-500 placeholder:text-slate-400"
                       />
+                    </div>
+                    <div className="md:col-span-3">
                       <Input
                         type="text"
                         value={formatNumberDots(pattern.multiplier)}
@@ -271,8 +261,11 @@ export function VillaImportCreateOwnerModal({
                             parseNumberDots(e.target.value) || 0,
                           )
                         }
-                        placeholder="Hệ số {price} (VD: 1.000.000)"
+                        placeholder="VD: 1.000.000"
+                        className="bg-white rounded-xl border-slate-200 text-sm text-slate-800 focus-visible:ring-emerald-500 placeholder:text-slate-400"
                       />
+                    </div>
+                    <div className="md:col-span-3">
                       <Input
                         type="text"
                         value={formatNumberDots(pattern.multiplier2)}
@@ -283,221 +276,167 @@ export function VillaImportCreateOwnerModal({
                             parseNumberDots(e.target.value),
                           )
                         }
-                        placeholder="Hệ số {price2} (VD: 100.000)"
+                        placeholder="VD: 100.000"
+                        className="bg-white rounded-xl border-slate-200 text-sm text-slate-800 focus-visible:ring-emerald-500 placeholder:text-slate-400"
                       />
                     </div>
+                  </div>
+                  {pricePatterns.length > 1 && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 h-10 w-10 text-slate-400 hover:text-red-500"
+                      className="shrink-0 h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
                       onClick={() => handleRemovePricePattern(index)}
                     >
-                      <X className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                ))}
-                <p className="text-[11px] text-slate-500 mt-1">
-                  💡 Hỗ trợ biến: <code>{"{price}"}</code> (phần nguyên) và <code>{"{price2}"}</code> (phần lẻ). Ví dụ mẫu <code>{"{price}cheo{price2}"}</code> với giá <code>4cheo5</code> sẽ tính: 4 x 1.000.000 + 5 x 100.000 = 4.500.000 đ. (Hệ số 2 để trống hệ thống sẽ tự quy đổi chuẩn).
-                </p>
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddPricePattern}
-                    className="rounded-xl"
-                  >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Thêm
-                  </Button>
+                  )}
                 </div>
+              ))}
+
+              <div className="rounded-xl bg-amber-50/70 border border-amber-200/80 p-3 text-xs text-amber-900 leading-relaxed space-y-1">
+                <div className="flex items-center gap-1.5 font-semibold text-amber-950">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                  Hướng dẫn cấu trúc giá:
+                </div>
+                <p>
+                  Sử dụng biến{" "}
+                  <span className="font-semibold text-amber-950">
+                    {"{price}"}
+                  </span>{" "}
+                  (phần nguyên) và{" "}
+                  <span className="font-semibold text-amber-950">
+                    {"{price2}"}
+                  </span>{" "}
+                  (phần lẻ). Ví dụ: với mẫu{" "}
+                  <span className="font-semibold text-amber-950">
+                    {"{price}cheo{price2}"}
+                  </span>
+                  , ô ghi{" "}
+                  <span className="font-semibold text-amber-950">4cheo5</span>{" "}
+                  sẽ tính thành{" "}
+                  <span className="font-bold text-amber-950">4.500.000đ</span>{" "}
+                  (4 x 1.000.000 + 5 x 100.000).
+                </p>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddPricePattern}
+                  className="rounded-xl border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  Thêm mẫu giá
+                </Button>
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="spreadsheetUrl">Link Google Sheet</Label>
-            <Input
-              id="spreadsheetUrl"
-              value={spreadsheetUrl}
-              onChange={(e) => onSpreadsheetUrlChange(e.target.value)}
-              placeholder="https://docs.google.com/spreadsheets/d/..."
-            />
-          </div>
-
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-900">
-                Nhận biết phòng đã cho thuê
-              </h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Chọn một quy ước để bước đọc giá biết ô nào không còn trống.
+          {/* Card 3: Nhận biết phòng đã cho thuê */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4 space-y-3">
+            <div>
+              <Label className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                Nhận biết phòng đã cho thuê (Đã book)
+              </Label>
+              <p className="text-xs text-slate-500 mt-1 font-normal">
+                Chọn phương thức tự động phát hiện ô/ngày đã có khách đặt cọc
+                hoặc giữ chỗ trên file Google Sheet.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Cách nhận biết</Label>
-                <Select
-                  value={bookedDetectionModes[0] || "cell_color"}
-                  onValueChange={(val) =>
-                    onBookedDetectionModesChange([val as string])
-                  }
-                >
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Chọn cách phát hiện chốt">
-                      {bookedDetectionModes[0] === "price_note"
-                        ? "Ô có note/comment"
-                        : bookedDetectionModes[0] === "cell_color_or_note"
-                          ? "Cả hai"
-                          : "Ô có màu nền"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cell_color" label="Ô có màu nền">
-                      Ô có màu nền
-                    </SelectItem>
-                    <SelectItem value="price_note" label="Ô có note/comment">
-                      Ô có note/comment
-                    </SelectItem>
-                    <SelectItem value="cell_color_or_note" label="Cả hai">
-                      Cả hai
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {(bookedDetectionModes.includes("cell_color") ||
-                bookedDetectionModes.includes("cell_color_or_note")) && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Màu đã cho thuê</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleFetchColor}
-                        disabled={isFetchingColor}
-                        className="h-6 px-2 text-xs rounded-lg"
-                      >
-                        {isFetchingColor ? (
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                        ) : null}
-                        Lấy màu
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddColor}
-                        className="h-6 px-2 text-xs rounded-lg"
-                      >
-                        <Plus className="mr-1 h-3 w-3" />
-                        Thêm
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {bookedCellColors.map((color, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2"
-                      >
-                        <div
-                          className="h-6 w-8 shrink-0 rounded border border-slate-200"
-                          style={{ backgroundColor: color }}
-                        />
-                        <Input
-                          value={color}
-                          onChange={(e) =>
-                            handleUpdateColor(index, e.target.value)
-                          }
-                          placeholder="#ffffff"
-                          className="h-8 border-0 shadow-none focus-visible:ring-0 px-2"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0 h-8 w-8 text-slate-400 hover:text-red-500"
-                          onClick={() => handleRemoveColor(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    {suggestedColors.length > 0 && (
-                      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
-                        <p className="text-xs text-blue-600 mb-2 font-medium">
-                          Màu tìm thấy trong file (Click để chọn):
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {suggestedColors.map((color, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => {
-                                if (!bookedCellColors.includes(color)) {
-                                  onBookedCellColorsChange([
-                                    ...bookedCellColors,
-                                    color,
-                                  ]);
-                                }
-                                setSuggestedColors(
-                                  suggestedColors.filter((c) => c !== color),
-                                );
-                              }}
-                              className="group relative h-8 w-8 rounded-md border border-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              style={{ backgroundColor: color }}
-                              title={color}
-                            >
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-xs font-medium text-slate-700">
+                Cách phát hiện ngày đã book
+              </Label>
+              <Select
+                value={bookedDetectionModes[0] || "cell_color_or_note"}
+                onValueChange={(val) =>
+                  onBookedDetectionModesChange([val as string])
+                }
+              >
+                <SelectTrigger className="bg-white rounded-xl border-slate-200 h-10 text-sm text-slate-800 focus:ring-emerald-500">
+                  <SelectValue placeholder="Chọn cách phát hiện chốt">
+                    {bookedDetectionModes[0] === "price_note"
+                      ? "Ô có ghi chú hoặc có chữ"
+                      : bookedDetectionModes[0] === "cell_color"
+                        ? "Ô có tô màu nền (Khác màu trắng)"
+                        : "Cả hai (Màu nền tô màu hoặc có ghi chú/chữ)"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem
+                    value="cell_color_or_note"
+                    label="Cả hai (Màu nền tô màu hoặc có ghi chú)"
+                  >
+                    Cả hai (Màu nền tô màu hoặc có ghi chú/chữ)
+                  </SelectItem>
+                  <SelectItem
+                    value="cell_color"
+                    label="Ô có tô màu nền (Khác màu trắng)"
+                  >
+                    Ô có tô màu nền (Khác màu trắng)
+                  </SelectItem>
+                  <SelectItem
+                    value="price_note"
+                    label="Ô có ghi chú hoặc có chữ"
+                  >
+                    Ô có ghi chú hoặc có chữ
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
+          {/* Card 4: Ghi chú */}
           <div className="space-y-2">
-            <Label htmlFor="customerNotes">Ghi chú</Label>
+            <Label
+              htmlFor="customerNotes"
+              className="text-sm font-semibold text-slate-800"
+            >
+              Ghi chú thêm
+            </Label>
             <Textarea
               id="customerNotes"
               value={customerNotes}
               onChange={(e) => onCustomerNotesChange(e.target.value)}
-              placeholder="Ghi chú để mn cùng biết"
-              className="min-h-20"
+              placeholder="Nhập ghi chú nội bộ để quản trị viên cùng theo dõi..."
+              className="min-h-[80px] bg-white rounded-xl border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-500"
             />
           </div>
         </AppModalBody>
 
-        <AppModalFooter>
+        {/* Footer */}
+        <AppModalFooter className="bg-slate-50/80 border-t border-slate-100 px-6 pt-4 pb-6 flex items-center justify-end gap-3">
           <Button
             type="button"
-            variant="ghost"
-            className="rounded-2xl"
+            variant="outline"
+            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-sm font-medium px-5 h-10"
             onClick={onClose}
           >
             Đóng
           </Button>
           <Button
             type="button"
-            className="rounded-2xl"
+            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-md shadow-emerald-600/20 px-6 h-10"
             onClick={onSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang xử lý...
+              </>
             ) : (
-              <Users className="mr-2 h-4 w-4" />
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {isEditing ? "Lưu thay đổi" : "Tạo Sheet mới"}
+              </>
             )}
-            {isEditing ? "Lưu thay đổi" : "Tạo Sheet"}
           </Button>
         </AppModalFooter>
       </AppModalContent>
