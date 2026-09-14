@@ -164,7 +164,7 @@ function SearchableSheetSelect({
                       "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors",
                       isSelected
                         ? "bg-emerald-50 font-medium text-emerald-700"
-                        : "text-slate-700 hover:bg-slate-100"
+                        : "text-slate-700 hover:bg-slate-100",
                     )}
                   >
                     <span className="truncate">{customer.name}</span>

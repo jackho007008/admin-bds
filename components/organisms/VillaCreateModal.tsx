@@ -350,7 +350,7 @@ export function VillaCreateModal({
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Tạo villa thất bại");
+      toast.error(villa ? "Cập nhật villa thất bại" : "Tạo villa thất bại");
     } finally {
       setIsSubmitting(false);
     }
