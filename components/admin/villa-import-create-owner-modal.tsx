@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   Loader2,
   FileSpreadsheet,
@@ -11,6 +13,8 @@ import {
   Calendar,
   DollarSign,
   Link2,
+  Palette,
+  Check,
 } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { villaImportService } from "@/services/villaImportService";
 import type { CreateOwnerModalProps } from "@/components/admin/villa-import-management.types";
 
 export function VillaImportCreateOwnerModal({
@@ -43,6 +48,7 @@ export function VillaImportCreateOwnerModal({
   tabMonthPatterns,
   pricePatterns,
   bookedDetectionModes,
+  bookedCellColors = [],
   onOpenChange,
   onCustomerNameChange,
   onCustomerNotesChange,
@@ -50,6 +56,7 @@ export function VillaImportCreateOwnerModal({
   onTabMonthPatternsChange,
   onPricePatternsChange,
   onBookedDetectionModesChange,
+  onBookedCellColorsChange,
   onSubmit,
   onClose,
 }: CreateOwnerModalProps) {
@@ -104,6 +111,105 @@ export function VillaImportCreateOwnerModal({
   const handleRemovePricePattern = (index: number) => {
     const newPatterns = pricePatterns.filter((_, i) => i !== index);
     onPricePatternsChange(newPatterns);
+  };
+
+  const [isFetchingColors, setIsFetchingColors] = useState(false);
+  const [detectedColors, setDetectedColors] = useState<
+    Array<{ hex: string; count: number }>
+  >([]);
+
+  const extractSpreadsheetId = (url: string) => {
+    const matched = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    return matched?.[1] || url.trim();
+  };
+
+  const extractSheetGid = (url: string) => {
+    const matched = url.match(/[?#&]gid=(\d+)/);
+    return matched?.[1] || "0";
+  };
+
+  const handleFetchColors = async () => {
+    if (!spreadsheetUrl?.trim()) {
+      toast.warning("Vui lòng nhập Link Google Sheet trước khi lấy màu");
+      return;
+    }
+
+    const spreadsheetId = extractSpreadsheetId(spreadsheetUrl);
+    const gid = extractSheetGid(spreadsheetUrl);
+
+    if (!spreadsheetId) {
+      toast.error("Link Google Sheet không hợp lệ");
+      return;
+    }
+
+    try {
+      setIsFetchingColors(true);
+      const result = await villaImportService.fetchGoogleSheetColors({
+        spreadsheetId,
+        gid,
+      });
+
+      if (result?.colors && result.colors.length > 0) {
+        const bgColors = result.colors
+          .filter(
+            (c) =>
+              c.kinds.includes("background") &&
+              c.hex.toLowerCase() !== "#ffffff",
+          )
+          .map((c) => ({
+            hex: c.hex.toLowerCase(),
+            count: c.count,
+          }));
+
+        if (bgColors.length > 0) {
+          setDetectedColors(bgColors);
+          toast.success(
+            `Đã quét được ${bgColors.length} màu nền trên Sheet. Hãy bấm vào màu bên dưới để chọn!`,
+          );
+        } else {
+          setDetectedColors([]);
+          toast.info("Không tìm thấy màu nền nào khác màu trắng trên Sheet");
+        }
+      } else {
+        setDetectedColors([]);
+        toast.info("Không phát hiện màu nền nào trên Google Sheet này");
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch sheet colors", error);
+      toast.error(
+        "Không thể lấy màu từ Google Sheet. Vui lòng kiểm tra lại link hoặc quyền truy cập.",
+      );
+    } finally {
+      setIsFetchingColors(false);
+    }
+  };
+
+  const toggleDetectedColor = (hex: string) => {
+    const cleanHex = hex.toLowerCase().trim();
+    const current = (bookedCellColors || []).map((c) => c.toLowerCase().trim());
+    if (current.includes(cleanHex)) {
+      const updated = (bookedCellColors || []).filter(
+        (c) => c.toLowerCase().trim() !== cleanHex,
+      );
+      onBookedCellColorsChange(updated);
+    } else {
+      onBookedCellColorsChange([...(bookedCellColors || []), cleanHex]);
+    }
+  };
+
+  const handleAddBookedColor = () => {
+    onBookedCellColorsChange([...(bookedCellColors || []), "#"]);
+  };
+
+  const handleUpdateBookedColor = (index: number, value: string) => {
+    const newColors = [...(bookedCellColors || [])];
+    newColors[index] = value;
+    onBookedCellColorsChange(newColors);
+  };
+
+  const handleRemoveBookedColor = (index: number) => {
+    const newColors = (bookedCellColors || []).filter((_, i) => i !== index);
+    onBookedCellColorsChange(newColors);
   };
 
   return (
@@ -390,6 +496,150 @@ export function VillaImportCreateOwnerModal({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Cấu hình màu nền nếu dùng phát hiện theo màu */}
+            {(bookedDetectionModes.includes("cell_color") ||
+              bookedDetectionModes.includes("cell_color_or_note") ||
+              bookedDetectionModes.length === 0) && (
+              <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                    <Palette className="h-3.5 w-3.5 text-slate-500" />
+                    Màu nền đánh dấu đã đặt phòng (Tùy chọn)
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleFetchColors}
+                      disabled={isFetchingColors}
+                      className="rounded-xl border-emerald-200 bg-emerald-50/60 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-8"
+                    >
+                      {isFetchingColors ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin text-emerald-600" />
+                          Đang quét...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-1 h-3 w-3 text-emerald-600" />
+                          Lấy màu từ Sheet
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddBookedColor}
+                      className="rounded-xl border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 h-8"
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Thêm màu
+                    </Button>
+                  </div>
+                </div>
+
+                {detectedColors.length > 0 ? (
+                  <div className="space-y-2 p-3 rounded-2xl bg-emerald-50/40 border border-emerald-200/60">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                        Màu nền phát hiện trên Sheet ({detectedColors.length}):
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-normal">
+                        Bấm vào màu để thêm/bớt
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {detectedColors.map((item) => {
+                        const isSelected = (bookedCellColors || [])
+                          .map((c) => c.toLowerCase().trim())
+                          .includes(item.hex.toLowerCase().trim());
+                        return (
+                          <button
+                            key={item.hex}
+                            type="button"
+                            onClick={() => toggleDetectedColor(item.hex)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-medium transition-all ${
+                              isSelected
+                                ? "border-emerald-500 bg-emerald-100/80 text-emerald-900 shadow-sm ring-2 ring-emerald-500/20"
+                                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span
+                              className="h-4 w-4 rounded-full border border-slate-300 shrink-0 shadow-inner"
+                              style={{ backgroundColor: item.hex }}
+                            />
+                            <span>{item.hex}</span>
+                            <span className="text-[10px] text-slate-500">
+                              ({item.count} ô)
+                            </span>
+                            {isSelected ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-600 ml-0.5 shrink-0" />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
+                {bookedCellColors && bookedCellColors.length > 0 ? (
+                  <div className="space-y-2">
+                    {bookedCellColors.map((color, index) => {
+                      const trimmed = color.trim();
+                      const isValidHex =
+                        /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(trimmed);
+                      return (
+                        <div key={index} className="flex items-center gap-2">
+                          <div
+                            className="h-9 w-9 rounded-xl border border-slate-200 shrink-0 shadow-sm"
+                            style={{
+                              backgroundColor: isValidHex ? trimmed : "#ffffff",
+                            }}
+                          />
+                          <Input
+                            value={color}
+                            onChange={(e) =>
+                              handleUpdateBookedColor(index, e.target.value)
+                            }
+                            placeholder="Mã màu HEX (vd: #ff0000)"
+                            className="bg-white rounded-xl border-slate-200 text-sm text-slate-800 font-mono focus-visible:ring-emerald-500 placeholder:text-slate-400"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0 h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                            onClick={() => handleRemoveBookedColor(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                <div className="rounded-xl bg-slate-100/70 border border-slate-200/80 p-3 text-xs text-slate-600 leading-relaxed">
+                  <p>
+                    <span className="font-semibold text-slate-800">Lưu ý:</span>{" "}
+                    Hệ thống chỉ kiểm tra{" "}
+                    <span className="font-semibold text-slate-800">
+                      màu nền (background)
+                    </span>{" "}
+                    của ô (bỏ qua màu chữ). Nếu để trống danh sách màu, hệ thống
+                    sẽ tự động coi tất cả các ô có{" "}
+                    <span className="font-semibold text-slate-800">
+                      màu nền khác màu trắng
+                    </span>{" "}
+                    là đã book.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Card 4: Ghi chú */}
