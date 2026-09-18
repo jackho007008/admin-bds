@@ -44,7 +44,6 @@ export function VillaImportManagementContent({
   const [pricePatterns, setPricePatterns] = useState<PricePatternConfig[]>([]);
   const [bookedDetectionModes, setBookedDetectionModes] = useState<string[]>([
     "cell_color",
-    "price_note",
   ]);
   const [bookedCellColors, setBookedCellColors] = useState<string[]>([]);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
@@ -329,7 +328,7 @@ export function VillaImportManagementContent({
       );
       setPricePatterns(metadata.pricePatterns || []);
       setBookedDetectionModes(
-        metadata.bookedDetectionModes || ["cell_color", "price_note"],
+        metadata.bookedDetectionModes || ["cell_color"],
       );
       setBookedCellColors(metadata.bookedCellColors || []);
     } else {
@@ -339,7 +338,7 @@ export function VillaImportManagementContent({
       setSpreadsheetUrl("");
       setTabMonthPatterns(["tháng {month}/{year}"]);
       setPricePatterns([]);
-      setBookedDetectionModes(["cell_color", "price_note"]);
+      setBookedDetectionModes(["cell_color"]);
       setBookedCellColors([]);
       setIsEditingCustomer(false);
     }

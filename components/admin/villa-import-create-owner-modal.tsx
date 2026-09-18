@@ -460,7 +460,7 @@ export function VillaImportCreateOwnerModal({
                 Cách phát hiện ngày đã book
               </Label>
               <Select
-                value={bookedDetectionModes[0] || "cell_color_or_note"}
+                value={bookedDetectionModes[0] || "cell_color"}
                 onValueChange={(val) =>
                   onBookedDetectionModesChange([val as string])
                 }
