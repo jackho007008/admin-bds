@@ -202,12 +202,33 @@ export function VillaImportManagementContent({
       villaId: string;
       metadata: Record<string, any>;
     }) => villaImportService.updateVilla(villaId, { metadata }),
-    onSuccess: () => {
-      toast.success("Cập nhật cấu hình thành công");
+    onSuccess: (_, variables) => {
+      toast.success(
+        "Cập nhật cấu hình thành công! Đang tự động đồng bộ lại giá...",
+      );
       setVillaToConfigSpecialMonths(null);
       void queryClient.invalidateQueries({
         queryKey: ["customerVillas", effectiveSelectedCustomerId],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ["customerRates", effectiveSelectedCustomerId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["villaRates"],
+      });
+      if (effectiveSelectedCustomerId && variables.villaId) {
+        villaImportService
+          .importAllConfiguredMonths({
+            customerId: effectiveSelectedCustomerId,
+            villaId: variables.villaId,
+          })
+          .catch((err) => {
+            console.error(
+              "Lỗi tự động đồng bộ giá sau khi lưu tháng đặc biệt:",
+              err,
+            );
+          });
+      }
     },
     onError: () => {
       toast.error("Cập nhật cấu hình thất bại");
