@@ -8,7 +8,6 @@ import { SystemSettingsTemplate } from "@/components/templates/SystemSettingsTem
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
-  const [maxViews, setMaxViews] = useState<number>(10);
   const [adminZalo, setAdminZalo] = useState<string>("");
 
   const { data: settings, isLoading } = useQuery({
@@ -17,9 +16,6 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    if (settings && maxViews !== settings.maxHiddenInfoViewsPerDay) {
-      setMaxViews(settings.maxHiddenInfoViewsPerDay);
-    }
     if (settings) {
       setAdminZalo(settings.adminZalo ?? "");
     }
@@ -28,7 +24,6 @@ export default function SettingsPage() {
   const mutation = useMutation({
     mutationFn: () =>
       systemSettingsService.updateSettings({
-        maxHiddenInfoViewsPerDay: maxViews,
         adminZalo: adminZalo.trim() || null,
       }),
     onSuccess: () => {
@@ -47,8 +42,6 @@ export default function SettingsPage() {
 
   return (
     <SystemSettingsTemplate
-      maxViews={maxViews}
-      setMaxViews={setMaxViews}
       adminZalo={adminZalo}
       setAdminZalo={setAdminZalo}
       onSubmit={handleSubmit}

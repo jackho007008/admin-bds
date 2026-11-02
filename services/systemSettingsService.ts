@@ -14,7 +14,7 @@ export const systemSettingsService = {
     return response.data;
   },
 
-  updateSettings: async (data: { maxHiddenInfoViewsPerDay: number; adminZalo: string | null }): Promise<SystemSettings> => {
+  updateSettings: async (data: { adminZalo: string | null }): Promise<SystemSettings> => {
     const response = await axiosInstance.patch("/system-settings", data);
     return response.data;
   },

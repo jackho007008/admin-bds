@@ -1,12 +1,10 @@
 "use client";
 
-import { ShieldCheck, Save } from "lucide-react";
+import { MessageCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface SystemSettingsTemplateProps {
-  maxViews: number;
-  setMaxViews: (value: number) => void;
   adminZalo: string;
   setAdminZalo: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -15,8 +13,6 @@ interface SystemSettingsTemplateProps {
 }
 
 export function SystemSettingsTemplate({
-  maxViews,
-  setMaxViews,
   adminZalo,
   setAdminZalo,
   onSubmit,
@@ -43,26 +39,10 @@ export function SystemSettingsTemplate({
       <div className="grid grid-cols-1 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-slate-800">Giới hạn xem thông tin</h2>
+            <MessageCircle className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-slate-800">Thông tin liên hệ</h2>
           </div>
           <form onSubmit={onSubmit} className="p-6 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 mr-4">
-                Số lần xem thông tin ẩn tối đa mỗi ngày (Pháp lý, Nội thất)
-              </label>
-              <Input
-                type="number"
-                value={maxViews}
-                onChange={(e) => setMaxViews(parseInt(e.target.value) || 0)}
-                min={1}
-                className="max-w-[200px]"
-              />
-              <p className="text-xs text-slate-400">
-                Lượt xem sẽ được tính dựa trên số lần User bấm vào nút Reveal (Hiện thông tin) trong App Mobile.
-              </p>
-            </div>
-
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 mr-4">
                 Số Zalo admin
