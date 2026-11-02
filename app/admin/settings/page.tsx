@@ -9,6 +9,7 @@ import { SystemSettingsTemplate } from "@/components/templates/SystemSettingsTem
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [maxViews, setMaxViews] = useState<number>(10);
+  const [adminZalo, setAdminZalo] = useState<string>("");
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["system-settings"],
@@ -19,11 +20,17 @@ export default function SettingsPage() {
     if (settings && maxViews !== settings.maxHiddenInfoViewsPerDay) {
       setMaxViews(settings.maxHiddenInfoViewsPerDay);
     }
+    if (settings) {
+      setAdminZalo(settings.adminZalo ?? "");
+    }
   }, [settings]);
 
   const mutation = useMutation({
-    mutationFn: (newMax: number) =>
-      systemSettingsService.updateSettings({ maxHiddenInfoViewsPerDay: newMax }),
+    mutationFn: () =>
+      systemSettingsService.updateSettings({
+        maxHiddenInfoViewsPerDay: maxViews,
+        adminZalo: adminZalo.trim() || null,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["system-settings"] });
       toast.success("Cập nhật cấu hình thành công!");
@@ -35,13 +42,15 @@ export default function SettingsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(maxViews);
+    mutation.mutate();
   };
 
   return (
     <SystemSettingsTemplate
       maxViews={maxViews}
       setMaxViews={setMaxViews}
+      adminZalo={adminZalo}
+      setAdminZalo={setAdminZalo}
       onSubmit={handleSubmit}
       isPending={mutation.isPending}
       isLoading={isLoading}
